@@ -1,101 +1,160 @@
+"use client";
 import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="font-sans text-gray-900">
+      {/* Hero Section */}
+      <section className="relative h-[90vh] bg-[url('/images/nepal-hero.jpg')] bg-cover bg-center flex items-center justify-center">
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-[#003893] bg-opacity-60"></div>
+        {/* Content */}
+        <div className="relative z-10 max-w-4xl mx-auto text-center text-white px-4">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 drop-shadow-lg">
+            Investing in Nepal's Future
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 leading-relaxed drop-shadow-md">
+            Infra Nepal Development Fund is a multinational investment fund dedicated to fostering sustainable growth and innovation within Nepal.
+          </p>
+          <Link
+            href="/about"
+            className="inline-block bg-[#DC143C] hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-full text-lg transition-shadow shadow-lg hover:shadow-xl"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            Learn More About Us
+          </Link>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+
+      {/* Investment Strategy Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#003893] mb-6">
+            Our Investment Strategy
+          </h2>
+          <p className="text-lg md:text-xl mb-8">
+            We are establishing a fund to foster economic growth and development within Nepal, sourcing capital from:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-lg md:text-xl">
+            <li>
+              Nepali diaspora and friends of Nepal residing overseas (<strong>Foreign Direct Investment</strong>)
+            </li>
+            <li>
+              Small investors from within Nepal (<strong>Domestic Source of Investment</strong>)
+            </li>
+          </ul>
+          <p className="text-lg md:text-xl mt-6">
+            By leveraging both international and domestic investment, we create a diversified and sustainable funding base to support projects in renewable energy, infrastructure, tourism, and agriculture.
+          </p>
+        </div>
+      </section>
+
+      {/* Our Impact Section */}
+      <section className="py-16 bg-[#003893] text-white">
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">
+            Our Impact
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="p-6 bg-[#003893] bg-opacity-80 rounded-lg shadow-md hover:shadow-xl transition">
+              <h3 className="font-bold text-2xl mb-2">Economic Growth</h3>
+              <p className="text-lg">
+                Creating jobs and fostering long-term prosperity through strategic investments.
+              </p>
+            </div>
+            <div className="p-6 bg-[#003893] bg-opacity-80 rounded-lg shadow-md hover:shadow-xl transition">
+              <h3 className="font-bold text-2xl mb-2">Infrastructure</h3>
+              <p className="text-lg">
+                Upgrading critical networks, roads, and connectivity to drive sustainable development.
+              </p>
+            </div>
+            <div className="p-6 bg-[#003893] bg-opacity-80 rounded-lg shadow-md hover:shadow-xl transition">
+              <h3 className="font-bold text-2xl mb-2">Sustainability</h3>
+              <p className="text-lg">
+                Promoting renewable energy and eco-friendly practices for a greener future.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Portfolio/Projects Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-[#003893] mb-4">
+                Our Portfolio
+              </h2>
+              <p className="text-lg md:text-xl mb-6">
+                At the heart of our investments is hydropower. Our portfolio includes the 28.1 MW Upper Kabeli Hydropower Project in Taplejung, alongside several other impactful projects spanning infrastructure and urban development.
+              </p>
+              <Link
+                href="/projects"
+                className="inline-block bg-[#DC143C] text-white font-semibold py-3 px-8 rounded-full text-lg hover:bg-red-700 transition-shadow shadow-lg hover:shadow-xl"
+              >
+                View Projects
+              </Link>
+            </div>
+            <div className="relative w-full h-64 md:h-96">
+              {/* Replace with your own project/development image */}
+              <Image
+                src="/images/nepal-projects.jpg"
+                alt="Nepal Projects"
+                fill
+                className="object-cover rounded-lg shadow-md"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Commitment Section */}
+      <section className="py-16 bg-[#003893] text-white">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="relative w-full h-64 md:h-96 order-2 md:order-1">
+              {/* Replace with your own team/investment image */}
+              <Image
+                src="/images/nepal-team.jpg"
+                alt="Infra Nepal Team"
+                fill
+                className="object-cover rounded-lg shadow-md"
+              />
+            </div>
+            <div className="order-1 md:order-2">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Our Commitment
+              </h2>
+              <p className="text-lg md:text-xl mb-6">
+                Transparency, accountability, and community empowerment drive our mission. Our experienced team rigorously vets every project to ensure alignment with Nepal’s long-term development goals.
+              </p>
+              <Link
+                href="/about"
+                className="inline-block bg-[#DC143C] text-white font-semibold py-3 px-8 rounded-full text-lg hover:bg-red-700 transition-shadow shadow-lg hover:shadow-xl"
+              >
+                Meet Our Team
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action Section */}
+      <section className="py-16 bg-[#DC143C] text-white text-center">
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Invest?</h2>
+          <p className="text-lg md:text-xl mb-8">
+            Join us in shaping Nepal’s future by contributing to sustainable projects that benefit both local communities and global stakeholders.
+          </p>
+          <Link
+            href="/contact"
+            className="inline-block bg-white text-[#DC143C] font-semibold py-3 px-8 rounded-full text-lg hover:bg-gray-100 transition-shadow shadow-lg hover:shadow-xl"
+          >
+            Contact Us
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
