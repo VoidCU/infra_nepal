@@ -8,10 +8,13 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  // Updated navigation items
   const navItems = [
     { name: "Home", path: "/" },
-    { name: "About", path: "/about" },
-    { name: "Our Initiatives", path: "/initiatives" },
+    { name: "Our Portfolio", path: "/portfolio" },
+    { name: "Our Team", path: "/team" },
+    { name: "Commitment", path: "/commitment" },
+    { name: "Opportunities", path: "/opportunities" },
     { name: "Contact", path: "/contact" },
   ];
 
@@ -21,46 +24,46 @@ const Header = () => {
       <header className="bg-white shadow fixed top-0 left-0 w-full z-50">
         <div className="container max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center space-x-2">
-            <Image
-              src="/images/logo.png" // Update with your logo path
-              alt="Infra Nepal Logo"
-              width={160}
-              height={80}
-              priority
-              className="object-contain"
-            />
+          <Link href="/">
+            <div className="flex items-center">
+              <Image
+                src="/images/logo.png" // Replace with your logo path
+                alt="Infra Nepal Logo"
+                width={160}
+                height={80}
+                className="object-contain"
+                priority
+              />
+            </div>
           </Link>
-
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden my:flex space-x-8">
             {navItems.map((item, index) => {
               const isActive = pathname === item.path;
               return (
-                <Link
-                  key={index}
-                  href={item.path}
-                  className={`relative text-lg font-medium group ${
-                    isActive ? "text-blue-600" : "text-gray-800"
-                  }`}
-                >
-                  {item.name}
-                  <span
-                    className={`absolute left-0 -bottom-1 h-0.5 transition-all duration-300 ${
-                      isActive
-                        ? "w-full bg-blue-600"
-                        : "w-0 group-hover:w-full bg-gray-800"
+                <Link key={index} href={item.path}>
+                  <div
+                    className={`relative text-lg font-medium group transition ${
+                      isActive ? "text-blue-600" : "text-gray-800"
                     }`}
-                  ></span>
+                  >
+                    {item.name}
+                    <span
+                      className={`absolute left-0 -bottom-1 h-0.5 transition-all duration-300 ${
+                        isActive
+                          ? "w-full bg-blue-600"
+                          : "w-0 group-hover:w-full bg-gray-800"
+                      }`}
+                    ></span>
+                  </div>
                 </Link>
               );
             })}
           </nav>
-
           {/* Mobile Hamburger Button */}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="md:hidden focus:outline-none"
+            className="my:hidden focus:outline-none"
             aria-label="Open mobile menu"
           >
             <svg className="w-8 h-8 fill-current text-gray-800" viewBox="0 0 24 24">
@@ -100,15 +103,17 @@ const Header = () => {
             {navItems.map((item, index) => {
               const isActive = pathname === item.path;
               return (
-                <Link
-                  key={index}
-                  href={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`text-2xl font-medium transition ${
-                    isActive ? "text-blue-600" : "text-gray-800 hover:text-gray-600"
-                  }`}
-                >
-                  {item.name}
+                <Link key={index} href={item.path}>
+                  <div
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`text-2xl font-medium transition ${
+                      isActive
+                        ? "text-blue-600"
+                        : "text-gray-800 hover:text-gray-600"
+                    }`}
+                  >
+                    {item.name}
+                  </div>
                 </Link>
               );
             })}

@@ -2,29 +2,21 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { FiTrendingUp } from "react-icons/fi";
-import { FaRoad, FaLeaf } from "react-icons/fa";
 
 const fadeUpVariant = {
-  hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0 },
-};
-
-const fadeDownVariant = {
-  hidden: { opacity: 0, y: -150 },
+  hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0 },
 };
 
 export default function HomePage() {
   return (
-    <div className="font-sans text-gray-900 mx-auto">
+    <div className="pt-20">
       {/* Hero Section */}
       <motion.section
+        variants={fadeUpVariant}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true }}
-        variants={fadeDownVariant}
-        transition={{ duration: 0.6 }}
+        viewport={{ once: true, amount: 0.2 }}
         className="relative h-[100vh] bg-[url('/images/nepal-hero.jpg')] bg-cover bg-center flex items-center justify-center"
       >
         {/* Overlay */}
@@ -32,28 +24,26 @@ export default function HomePage() {
         {/* Content */}
         <div className="relative z-10 max-w-4xl mx-auto text-center text-white px-4">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 drop-shadow-lg">
-            Investing in Nepal&apos;s Future
+            Investing in Nepal's Future
           </h1>
           <p className="text-xl md:text-2xl mb-8 leading-relaxed drop-shadow-md">
-            Infra Nepal Development Fund is a multinational investment fund
-            dedicated to fostering sustainable growth and innovation within Nepal.
+            Infra Nepal Development Fund is a multinational investment fund dedicated to fostering sustainable growth and innovation within Nepal.
           </p>
           <Link
-            href="/about"
+            href="/contact"
             className="inline-block bg-[#DC143C] hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-full text-lg transition-shadow shadow-lg hover:shadow-xl"
           >
-            Learn More About Us
+            Join Us
           </Link>
         </div>
       </motion.section>
 
       {/* Investment Strategy Section */}
       <motion.section
+        variants={fadeUpVariant}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true }}
-        variants={fadeUpVariant}
-        transition={{ duration: 0.6, delay: 0.2 }}
+        viewport={{ once: true, amount: 0.2 }}
         className="py-16 bg-white max-w-4xl mx-auto"
       >
         <div className="container mx-auto px-6">
@@ -61,34 +51,28 @@ export default function HomePage() {
             Our Investment Strategy
           </h2>
           <p className="text-lg md:text-xl mb-8">
-            We are establishing a fund to foster economic growth and development
-            within Nepal, sourcing capital from:
+            We are establishing a fund to foster economic growth and development within Nepal, sourcing capital from:
           </p>
           <ul className="list-disc list-inside space-y-2 text-lg md:text-xl">
             <li>
-              Nepali diaspora and friends of Nepal residing overseas (
-              <strong>Foreign Direct Investment</strong>)
+              Nepali diaspora and friends of Nepal residing overseas (<strong>Foreign Direct Investment</strong>)
             </li>
             <li>
-              Small investors from within Nepal (
-              <strong>Domestic Source of Investment</strong>)
+              Small investors from within Nepal (<strong>Domestic Source of Investment</strong>)
             </li>
           </ul>
           <p className="text-lg md:text-xl mt-6">
-            By leveraging both international and domestic investment, we create a
-            diversified and sustainable funding base to support projects in
-            renewable energy, infrastructure, tourism, and agriculture.
+            By leveraging both international and domestic investment, we create a diversified and sustainable funding base to support projects in renewable energy, infrastructure, tourism, and agriculture.
           </p>
         </div>
       </motion.section>
 
       {/* Our Impact Section */}
       <motion.section
+        variants={fadeUpVariant}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true }}
-        variants={fadeUpVariant}
-        transition={{ duration: 0.6, delay: 0.4 }}
+        viewport={{ once: true, amount: 0.2 }}
         className="py-16 bg-[#003893] text-white"
       >
         <div className="container mx-auto px-6 max-w-4xl">
@@ -97,80 +81,40 @@ export default function HomePage() {
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="p-6 bg-[#003893] bg-opacity-80 rounded-lg shadow-md hover:shadow-xl transition">
-              <div className="flex justify-center mb-4">
-                <FiTrendingUp className="text-4xl" />
-              </div>
-              <h3 className="font-bold text-2xl mb-2 text-center">
-                Economic Growth
-              </h3>
-              <p className="text-lg text-center">
-                Creating jobs and fostering long-term prosperity through strategic
-                investments.
+              <h3 className="font-bold text-2xl mb-2">Economic Growth</h3>
+              <p className="text-lg">
+                Creating jobs and fostering long-term prosperity through strategic investments.
               </p>
             </div>
             <div className="p-6 bg-[#003893] bg-opacity-80 rounded-lg shadow-md hover:shadow-xl transition">
-              <div className="flex justify-center mb-4">
-                <FaRoad className="text-4xl" />
-              </div>
-              <h3 className="font-bold text-2xl mb-2 text-center">
-                Infrastructure
-              </h3>
-              <p className="text-lg text-center">
-                Upgrading critical networks, roads, and connectivity to drive
-                sustainable development.
+              <h3 className="font-bold text-2xl mb-2">Infrastructure</h3>
+              <p className="text-lg">
+                Upgrading critical networks, roads, and connectivity to drive sustainable development.
               </p>
             </div>
             <div className="p-6 bg-[#003893] bg-opacity-80 rounded-lg shadow-md hover:shadow-xl transition">
-              <div className="flex justify-center mb-4">
-                <FaLeaf className="text-4xl" />
-              </div>
-              <h3 className="font-bold text-2xl mb-2 text-center">
-                Sustainability
-              </h3>
-              <p className="text-lg text-center">
-                Promoting renewable energy and eco-friendly practices for a greener
-                future.
+              <h3 className="font-bold text-2xl mb-2">Sustainability</h3>
+              <p className="text-lg">
+                Promoting renewable energy and eco-friendly practices for a greener future.
               </p>
             </div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Portfolio/Projects Section */}
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={fadeUpVariant}
-        transition={{ duration: 0.6, delay: 0.6 }}
-        className="py-16 bg-white"
-      >
-        <div className="container mx-auto px-6 max-w-4xl">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-[#003893] mb-4">
-                Our Portfolio
-              </h2>
-              <p className="text-lg md:text-xl mb-6">
-                At the heart of our investments is hydropower. Our portfolio
-                includes the 28.1 MW Upper Kabeli Hydropower Project in Taplejung,
-                alongside several other impactful projects spanning infrastructure
-                and urban development.
+            <div className="p-6 bg-[#003893] bg-opacity-80 rounded-lg shadow-md hover:shadow-xl transition">
+              <h3 className="font-bold text-2xl mb-2">Empowerment</h3>
+              <p className="text-lg">
+                Empowering local communities and fostering social development through targeted investments.
               </p>
-              <Link
-                href="/initiatives"
-                className="inline-block bg-[#DC143C] text-white font-semibold py-3 px-8 rounded-full text-lg hover:bg-red-700 transition-shadow shadow-lg hover:shadow-xl"
-              >
-                View Projects
-              </Link>
             </div>
-            <div className="relative w-full h-64 md:h-96">
-              <Image
-                src="/images/nepal-projects.jpg"
-                alt="Nepal Projects"
-                fill
-                className="object-cover rounded-lg shadow-md"
-              />
+            <div className="p-6 bg-[#003893] bg-opacity-80 rounded-lg shadow-md hover:shadow-xl transition">
+              <h3 className="font-bold text-2xl mb-2">Investment</h3>
+              <p className="text-lg">
+                Attracting foreign and domestic investment to drive growth and innovation in Nepal.
+              </p>
+            </div>
+            <div className="p-6 bg-[#003893] bg-opacity-80 rounded-lg shadow-md hover:shadow-xl transition">
+              <h3 className="font-bold text-2xl mb-2">Overall Development</h3>
+              <p className="text-lg">
+                Contributing to Nepal’s long-term development goals through strategic investments.
+              </p>
             </div>
           </div>
         </div>
@@ -178,14 +122,13 @@ export default function HomePage() {
 
       {/* Commitment Section */}
       <motion.section
+        variants={fadeUpVariant}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true }}
-        variants={fadeUpVariant}
-        transition={{ duration: 0.6, delay: 0.8 }}
-        className="py-16 bg-[#003893] text-white"
+        viewport={{ once: true, amount: 0.2 }}
+        className="py-16 bg-white text-black"
       >
-        <div className="container max-w-6xl mx-auto px-6">
+        <div className="container mx-auto px-6 max-w-4xl">
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div className="relative w-full h-64 md:h-96 order-2 md:order-1">
               <Image
@@ -200,12 +143,10 @@ export default function HomePage() {
                 Our Commitment
               </h2>
               <p className="text-lg md:text-xl mb-6">
-                Transparency, accountability, and community empowerment drive our
-                mission. Our experienced team rigorously vets every project to ensure
-                alignment with Nepal’s long-term development goals.
+                Transparency, accountability, and community empowerment drive our mission. Our experienced team rigorously vets every project to ensure alignment with Nepal’s long-term development goals.
               </p>
               <Link
-                href="/about"
+                href="/team"
                 className="inline-block bg-[#DC143C] text-white font-semibold py-3 px-8 rounded-full text-lg hover:bg-red-700 transition-shadow shadow-lg hover:shadow-xl"
               >
                 Meet Our Team
@@ -217,11 +158,10 @@ export default function HomePage() {
 
       {/* Call to Action Section */}
       <motion.section
+        variants={fadeUpVariant}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true }}
-        variants={fadeDownVariant}
-        transition={{ duration: 0.6, delay: 1 }}
+        viewport={{ once: true, amount: 0.2 }}
         className="py-16 bg-[#DC143C] text-white text-center"
       >
         <div className="container mx-auto max-w-6xl px-6">
