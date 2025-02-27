@@ -24,7 +24,7 @@ export default function HomePage() {
         {/* Content */}
         <div className="relative z-10 max-w-4xl mx-auto text-center text-white px-4">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 drop-shadow-lg">
-            Investing in Nepal's Future
+            Investing in Nepal&apos;s Future
           </h1>
           <p className="text-xl md:text-2xl mb-8 leading-relaxed drop-shadow-md">
             Infra Nepal Development Fund is a multinational investment fund dedicated to fostering sustainable growth and innovation within Nepal.

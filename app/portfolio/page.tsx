@@ -68,7 +68,7 @@ export default function PortfolioPage() {
         </p>
         <ul className="list-disc pl-8 text-lg md:text-xl leading-relaxed">
           <li>
-            <strong>Energy Security:</strong> Diversifying Nepal's energy mix and ensuring a stable supply of clean energy.
+            <strong>Energy Security:</strong> Diversifying Nepal&apos;s energy mix and ensuring a stable supply of clean energy.
           </li>
           <li>
             <strong>Economic Growth:</strong> Boosting local economies by generating employment and stimulating industrial development.
