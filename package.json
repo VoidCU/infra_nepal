@@ -11,6 +11,7 @@
     "seed": "ts-node --esm --transpile-only prisma/seed.js"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@prisma/client": "^6.4.1",
     "bcryptjs": "^3.0.2",
     "cookie": "^1.0.2",

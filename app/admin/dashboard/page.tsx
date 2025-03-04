@@ -1,107 +1,56 @@
+// /admin/dashboard/page.tsx
 "use client";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
-export default function AdminDashboard() {
-  const router = useRouter();
-  interface Application {
-    id: string;
-    applicationId: string;
-    details: string | {
-      firstName: string;
-      lastName: string;
-      email: string;
-    };
-    status: string;
-    createdAt: string;
-  }
-
-  const [applications, setApplications] = useState<Application[]>([]);
+export default function DashboardHome() {
+  const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch applications from the API on component mount
   useEffect(() => {
-    async function fetchApplications() {
+    async function fetchStats() {
       try {
-        const res = await fetch("/api/applications");
-        if (res.ok) {
-          const data = await res.json();
-          setApplications(data.applications);
-        } else {
-          console.error("Failed to fetch applications");
+        const res = await fetch("/api/admin/stats");
+        const data = await res.json();
+        if (data.success) {
+          setStats(data.stats);
         }
       } catch (error) {
-        console.error("Error fetching applications:", error);
+        console.error("Error fetching stats:", error);
       } finally {
         setLoading(false);
       }
     }
-    fetchApplications();
+    fetchStats();
   }, []);
 
-  const handleLogout = async () => {
-    const res = await fetch("/api/logout", { method: "POST" });
-    if (res.ok) {
-      router.push("/login"); // Redirect to login page after logout
-    }
-  };
+  if (loading) return <p>Loading stats...</p>;
+  if (!stats) return <p>No stats available</p>;
 
   return (
-    <div className="pt-20 p-4">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-        >
-          Logout
-        </button>
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-xl font-bold">Total Users</h3>
+          <p className="text-3xl">{stats.users}</p>
+        </div>
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-xl font-bold">Total Applications</h3>
+          <p className="text-3xl">{stats.applications}</p>
+        </div>
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-xl font-bold">First-Step Applications</h3>
+          <p className="text-3xl">{stats.applied}</p>
+        </div>
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-xl font-bold">Second-Step Applications</h3>
+          <p className="text-3xl">{stats.pending}</p>
+        </div>
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-xl font-bold">Verified Applications</h3>
+          <p className="text-3xl">{stats.verified}</p>
+        </div>
       </div>
-      <p className="mb-4">
-        Welcome, Admin. Here you can review share applications and manage user requests.
-      </p>
-
-      {loading ? (
-        <p>Loading applications...</p>
-      ) : applications.length === 0 ? (
-        <p>No applications found.</p>
-      ) : (
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr>
-              <th className="py-2 px-4 border">Application ID</th>
-              <th className="py-2 px-4 border">Name</th>
-              <th className="py-2 px-4 border">Email</th>
-              <th className="py-2 px-4 border">Status</th>
-              <th className="py-2 px-4 border">Submitted At</th>
-            </tr>
-          </thead>
-          <tbody>
-            {applications.map((app) => {
-              // Parse details JSON; it might be stored as a string or already as an object
-              let details: { firstName: string; lastName: string; email: string } = { firstName: '', lastName: '', email: '' };
-              try {
-                details = typeof app.details === "string" ? JSON.parse(app.details) : app.details;
-              } catch (error) {
-                console.error("Error parsing application details", error);
-              }
-              return (
-                <tr key={app.id}>
-                  <td className="py-2 px-4 border">{app.applicationId}</td>
-                  <td className="py-2 px-4 border">
-                    {details.firstName} {details.lastName}
-                  </td>
-                  <td className="py-2 px-4 border">{details.email}</td>
-                  <td className="py-2 px-4 border">{app.status}</td>
-                  <td className="py-2 px-4 border">
-                    {new Date(app.createdAt).toLocaleString()}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
     </div>
   );
 }

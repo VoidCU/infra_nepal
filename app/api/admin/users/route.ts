@@ -1,4 +1,4 @@
-// /api/applications/route.ts
+// /api/admin/users/route.ts
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
@@ -6,13 +6,10 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const applications = await prisma.application.findMany({
-      include: { user: true },
-      orderBy: { createdAt: "desc" },
-    });
-    return NextResponse.json({ success: true, applications });
+    const users = await prisma.user.findMany();
+    return NextResponse.json({ success: true, users });
   } catch (error) {
-    console.error("Error fetching applications:", error);
+    console.error("Error fetching users:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }
