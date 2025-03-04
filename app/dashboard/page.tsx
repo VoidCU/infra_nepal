@@ -42,8 +42,8 @@ export default function UserDashboard() {
   return (
     <div className="pt-20 max-w-6xl mx-auto p-4">
       <div className="flex justify-between items-center my-8">
-      <h1 className="text-3xl font-bold">My Applications</h1>
-      <button
+        <h1 className="text-3xl font-bold">My Applications</h1>
+        <button
           onClick={handleLogout}
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
         >
@@ -68,7 +68,6 @@ export default function UserDashboard() {
             </thead>
             <tbody>
               {applications.map((app) => {
-                // Parse the stored JSON details
                 let details = {};
                 try {
                   details =
@@ -89,12 +88,21 @@ export default function UserDashboard() {
                       {new Date(app.createdAt).toLocaleString()}
                     </td>
                     <td className="py-2 px-4 border">
-                      <button
-                        onClick={() => setSelectedApp(app)}
-                        className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
-                      >
-                        View Details
-                      </button>
+                      {app.status === "processed" ? (
+                        <button
+                          onClick={() => router.push("/apply/complete")}
+                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
+                        >
+                          Continue
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setSelectedApp(app)}
+                          className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
+                        >
+                          View Details
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -145,9 +153,8 @@ export default function UserDashboard() {
                     <strong>Citizenship No:</strong> {details.citizenshipNo}
                   </p>
                   <p>
-                    <strong>Address:</strong>{" "}
-                    {details.municipality}-{details.wardNo}, {details.district},{details.province}
-                    
+                    <strong>Address:</strong> {details.municipality}-{details.wardNo},{" "}
+                    {details.district}, {details.province}
                   </p>
                   <p>
                     <strong>Occupation:</strong> {details.occupation}
@@ -162,7 +169,6 @@ export default function UserDashboard() {
                     <strong>Submitted At:</strong>{" "}
                     {new Date(selectedApp.createdAt).toLocaleString()}
                   </p>
-                  {/* Add more fields as necessary */}
                 </div>
               );
             })()}

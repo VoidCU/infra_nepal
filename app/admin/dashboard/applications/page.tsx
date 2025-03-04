@@ -231,20 +231,20 @@ export default function AdminApplications() {
                   className="py-2 px-4 border cursor-pointer"
                   onClick={() => handleSort("applicationId")}
                 >
-                  Application ID <ArrowUpDownIcon className="w-4 h-4 inline-block" />
+                  Application ID <ArrowsUpDownIcon className="w-4 h-4 inline-block" />
                 </th>
                 <th
                   className="py-2 px-4 border cursor-pointer"
                   onClick={() => handleSort("applicant")}
                 >
-                  Applicant <ArrowUpDownIcon className="w-4 h-4 inline-block" />
+                  Applicant <ArrowsUpDownIcon className="w-4 h-4 inline-block" />
                 </th>
                 <th className="py-2 px-4 border">Status</th>
                 <th
                   className="py-2 px-4 border cursor-pointer"
                   onClick={() => handleSort("submittedAt")}
                 >
-                  Submitted At <ArrowUpDownIcon className="w-4 h-4 inline-block" />
+                  Submitted At <ArrowsUpDownIcon className="w-4 h-4 inline-block" />
                 </th>
                 <th className="py-2 px-4 border">Action</th>
               </tr>
