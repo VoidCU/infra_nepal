@@ -2,6 +2,72 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+// A simple ImageModal component for displaying full-size images.
+function ImageModal({
+  src,
+  alt,
+  onClose,
+}: {
+  src: string;
+  alt: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div
+        className="absolute inset-0 bg-black opacity-75"
+        onClick={onClose}
+      ></div>
+      <div className="relative z-10 p-4">
+        <img src={src} alt={alt} className="max-h-screen max-w-full" />
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 bg-gray-600 text-white px-3 py-1 rounded"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmationModal({
+  message,
+  onConfirm,
+  onCancel,
+}: {
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onCancel}
+      ></div>
+      <div className="relative bg-white rounded-lg p-6 max-w-sm mx-auto z-10">
+        <h2 className="text-xl font-bold mb-4">Please Confirm</h2>
+        <p className="mb-6">{message}</p>
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={onCancel}
+            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function EditApplicationPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -11,6 +77,17 @@ export default function EditApplicationPage() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [editMode, setEditMode] = useState(false);
+  const [confirmData, setConfirmData] = useState<{
+    message: string;
+    newStatus: string;
+    show: boolean;
+  }>({ message: "", newStatus: "", show: false });
+  const [popup, setPopup] = useState<{ show: boolean; message: string }>({
+    show: false,
+    message: "",
+  });
+  // For image modal popup
+  const [modalImage, setModalImage] = useState<{ src: string; alt: string } | null>(null);
 
   useEffect(() => {
     async function fetchApplication() {
@@ -45,10 +122,12 @@ export default function EditApplicationPage() {
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
+  // Manual status change is not allowed in edit mode. In view mode, direct status buttons are used.
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setStatus(e.target.value);
   };
 
+  // Save edited details (in edit mode, only details and photos; status remains unchanged)
   const handleSave = async () => {
     try {
       const res = await fetch(`/api/applications/${id}`, {
@@ -58,9 +137,9 @@ export default function EditApplicationPage() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Application updated successfully");
+        setPopup({ show: true, message: "Application updated successfully" });
         setEditMode(false);
-        router.refresh(); // re-fetch the data
+        router.refresh();
       } else {
         setError(data.error || "Update failed");
       }
@@ -68,6 +147,41 @@ export default function EditApplicationPage() {
       console.error(err);
       setError("An error occurred");
     }
+  };
+
+  // Direct status change using confirmation modal
+  const handleDirectStatusChange = (newStatus: string, message: string) => {
+    setConfirmData({ show: true, newStatus, message });
+  };
+
+  const confirmStatusChange = async () => {
+    setConfirmData((prev) => ({ ...prev, show: false }));
+    try {
+      const res = await fetch(`/api/applications/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ details: formData, status: confirmData.newStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPopup({ show: true, message: "Status updated successfully" });
+        router.refresh();
+      } else {
+        setError(data.error || "Status update failed");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("An error occurred");
+    }
+  };
+
+  const cancelStatusChange = () => {
+    setConfirmData({ show: false, newStatus: "", message: "" });
+  };
+
+  // When an image is clicked, open the image modal.
+  const handleImageClick = (src: string, alt: string) => {
+    setModalImage({ src, alt });
   };
 
   if (loading) return <p>Loading...</p>;
@@ -97,7 +211,7 @@ export default function EditApplicationPage() {
     { label: "Number of Shares", key: "numberOfShares" },
   ];
 
-  // Additional fields submitted in the 2nd step (if present)
+  // Additional fields submitted in the 2nd step (if available)
   const secondStepFields = [
     { label: "Demat ID", key: "dematId" },
     { label: "Payment Method", key: "paymentMethod" },
@@ -110,7 +224,7 @@ export default function EditApplicationPage() {
     { label: "Signature Image", key: "signImage" },
   ];
 
-  // Determine if 2nd step details exist (using dematId as indicator)
+  // Determine if second-step details exist (using dematId as indicator)
   const isSecondStep = formData.dematId !== undefined && formData.dematId !== "";
 
   return (
@@ -119,23 +233,54 @@ export default function EditApplicationPage() {
         <h1 className="text-3xl font-bold">
           Application {application.applicationId}
         </h1>
-        <div>
-          {editMode ? (
+        <div className="flex items-center space-x-2">
+          {/* Direct status change buttons (only in view mode) */}
+          {!editMode && application.status === "applied" && (
+            <button
+              onClick={() =>
+                handleDirectStatusChange(
+                  "processed",
+                  "Accept and start 2nd step?"
+                )
+              }
+              className="bg-green-600 text-white px-4 py-2 rounded"
+            >
+              Accept & Start 2nd Step
+            </button>
+          )}
+          {!editMode && application.status === "pending" && (
             <>
               <button
-                onClick={() => setEditMode(false)}
-                className="bg-gray-600 text-white px-4 py-2 rounded mr-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
+                onClick={() =>
+                  handleDirectStatusChange("verified", "Accept this application?")
+                }
                 className="bg-green-600 text-white px-4 py-2 rounded"
               >
-                Save Changes
+                Accept
+              </button>
+              <button
+                onClick={() =>
+                  handleDirectStatusChange(
+                    "more_details",
+                    "Request more details?"
+                  )
+                }
+                className="bg-yellow-600 text-white px-4 py-2 rounded"
+              >
+                Request More Details
+              </button>
+              <button
+                onClick={() =>
+                  handleDirectStatusChange("cancelled", "Reject this application?")
+                }
+                className="bg-red-600 text-white px-4 py-2 rounded"
+              >
+                Reject
               </button>
             </>
-          ) : (
+          )}
+          {/* In view mode, a separate "Edit Details" button toggles editMode */}
+          {!editMode && (
             <button
               onClick={() => setEditMode(true)}
               className="bg-blue-600 text-white px-4 py-2 rounded"
@@ -146,38 +291,11 @@ export default function EditApplicationPage() {
         </div>
       </div>
 
-      {/* Status Section (always editable in edit mode) */}
+      {/* Status Section - In edit mode, status is shown as read-only text */}
       <div className="mb-6">
         <label className="block font-semibold mb-1">Status</label>
         {editMode ? (
-          <select
-            value={status}
-            onChange={handleStatusChange}
-            className="w-full border p-2 rounded"
-          >
-            {/* For first-step applications */}
-            {application.status === "applied" && (
-              <>
-                <option value="applied">Applied (1st Step)</option>
-                <option value="processed">Accept & Start 2nd Step</option>
-                <option value="cancelled">Reject</option>
-              </>
-            )}
-            {/* For second-step applications */}
-            {application.status === "pending" && (
-              <>
-                <option value="pending">Pending (2nd Step)</option>
-                <option value="verified">Accept</option>
-                <option value="more_details">Request More Details</option>
-                <option value="cancelled">Reject</option>
-              </>
-            )}
-            {/* If in another state, display it */}
-            {application.status !== "applied" &&
-              application.status !== "pending" && (
-                <option value={application.status}>{application.status}</option>
-              )}
-          </select>
+          <p className="border p-2 rounded">{status}</p>
         ) : (
           <p className="border p-2 rounded">{status}</p>
         )}
@@ -222,13 +340,27 @@ export default function EditApplicationPage() {
               {secondStepFields.map(({ label, key }) => (
                 <div key={key}>
                   <label className="block font-semibold">{label}</label>
-                  <input
-                    type="text"
-                    name={key}
-                    value={formData[key] || ""}
-                    onChange={handleInputChange}
-                    className="w-full border p-2 rounded"
-                  />
+                  {/* For image fields, in edit mode allow text input (URL) so admin can override if needed */}
+                  {key === "paymentReceipt" ||
+                  key === "passportPhoto" ||
+                  key === "citizenshipDoc" ||
+                  key === "signImage" ? (
+                    <input
+                      type="text"
+                      name={key}
+                      value={formData[key] || ""}
+                      onChange={handleInputChange}
+                      className="w-full border p-2 rounded"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      name={key}
+                      value={formData[key] || ""}
+                      onChange={handleInputChange}
+                      className="w-full border p-2 rounded"
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -237,12 +369,78 @@ export default function EditApplicationPage() {
               {secondStepFields.map(({ label, key }) => (
                 <div key={key}>
                   <dt className="font-semibold">{label}</dt>
-                  <dd className="mt-1">{formData[key] || "-"}</dd>
+                  <dd className="mt-1">
+                    {key === "paymentReceipt" ||
+                    key === "passportPhoto" ||
+                    key === "citizenshipDoc" ||
+                    key === "signImage" ? (
+                      formData[key] ? (
+                        // Image is clickable to open a modal
+                        <img
+                          src={formData[key]}
+                          alt={label}
+                          className="h-24 object-cover rounded cursor-pointer"
+                          onClick={() => handleImageClick(formData[key], label)}
+                        />
+                      ) : (
+                        "-"
+                      )
+                    ) : (
+                      formData[key] || "-"
+                    )}
+                  </dd>
                 </div>
               ))}
             </dl>
           )}
         </div>
+      )}
+
+      {/* In edit mode, show a Save Changes button */}
+      {editMode && (
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={handleSave}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          >
+            Save Changes
+          </button>
+        </div>
+      )}
+
+      {/* Confirmation Popup for Status Change */}
+      {confirmData.show && (
+        <ConfirmationModal
+          message={confirmData.message}
+          onConfirm={confirmStatusChange}
+          onCancel={cancelStatusChange}
+        />
+      )}
+
+      {/* Popup after successful update */}
+      {popup.show && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black opacity-50"></div>
+          <div className="relative bg-white rounded-lg p-8 max-w-md mx-auto text-center shadow-lg">
+            <h2 className="text-2xl font-bold text-[#003893] mb-4">Success</h2>
+            <p className="text-lg mb-6">{popup.message}</p>
+            <button
+              onClick={() => setPopup({ show: false, message: "" })}
+              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Image Modal Popup */}
+      {modalImage && (
+        <ImageModal
+          src={modalImage.src}
+          alt={modalImage.alt}
+          onClose={() => setModalImage(null)}
+        />
       )}
     </div>
   );

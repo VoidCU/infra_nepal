@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { a } from "framer-motion/client";
 
 export default function UserDashboard() {
   const router = useRouter();
@@ -83,12 +84,19 @@ export default function UserDashboard() {
                     <td className="py-2 px-4 border">
                       {details.firstName} {details.lastName}
                     </td>
+                    {app.status === "more_details" ? (
+                      <td className="py-2 px-4 border text-yellow-600">
+                        Re-upload Documents
+                      </td>
+                    ) : (
+                      <td className="py-2 px-4 border">{app.status}</td>
+                    )}
                     <td className="py-2 px-4 border">{app.status}</td>
                     <td className="py-2 px-4 border">
                       {new Date(app.createdAt).toLocaleString()}
                     </td>
                     <td className="py-2 px-4 border">
-                      {app.status === "processed" ? (
+                      {app.status === "processed" || app.status==="more_details" ? (
                         <button
                           onClick={() => router.push("/apply/complete")}
                           className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"

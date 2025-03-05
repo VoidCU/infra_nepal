@@ -1,4 +1,3 @@
-// /api/applications/continue/route.ts
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import formidable from "formidable";
@@ -22,12 +21,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Convert Next.js Request to a Node.js stream using PassThrough
+// Convert Next.js Request to Node.js stream using PassThrough
 async function requestToStream(req: Request): Promise<PassThrough> {
   const buffer = Buffer.from(await req.arrayBuffer());
   const stream = new PassThrough();
   stream.end(buffer);
-  // Convert headers to plain object and attach them to the stream
+  // Convert headers to a plain object and attach them to the stream
   const headersObj: Record<string, string> = {};
   req.headers.forEach((value, key) => {
     headersObj[key] = value;
@@ -38,9 +37,7 @@ async function requestToStream(req: Request): Promise<PassThrough> {
 
 export async function PUT(request: Request) {
   try {
-    // Convert request to stream and attach headers
     const stream = await requestToStream(request);
-
     const form = formidable({
       multiples: false,
       uploadDir,
@@ -59,26 +56,36 @@ export async function PUT(request: Request) {
 
     const { fields, files } = await parseForm();
 
-    // Normalize fields: if a field value is an array, take its first element
+
+    // Normalize fields: if a field value is an array, pick its first element.
     const normalizedFields: Record<string, any> = {};
     for (const key in fields) {
       const value = fields[key];
       normalizedFields[key] = Array.isArray(value) ? value[0] : value;
     }
 
-    // Build file paths relative to public folder for each uploaded file
+    // Process file uploads and build file paths relative to public folder
     const filePaths: Record<string, string> = {};
+    console.log("Files:", files);
     for (const fieldName in files) {
-      const file = files[fieldName] as formidable.File;
-      // Try file.filepath; if undefined, use file.path
-      const filePath = file.filepath || file.path;
-      if (typeof filePath === "string") {
-        const relativePath = `/userdocs/${path.basename(filePath)}`;
-        filePaths[fieldName] = relativePath;
+      console.log("Field name:", fieldName);
+      
+      const fileArray = files[fieldName] as formidable.File[]; // ✅ Correctly treat it as an array
+      for (const file of fileArray) { // ✅ Loop through each file in the array
+        console.log("File:", file);
+        
+        const filePath = file.filepath || file.path;
+        console.log("File path:", filePath);
+        
+        if (typeof filePath === "string") {
+          const relativePath = `/userdocs/${path.basename(filePath)}`;
+          filePaths[fieldName] = relativePath;
+        }
       }
     }
+    console.log("File paths:", filePaths);
 
-    // Retrieve token from cookies and verify
+    // Retrieve and verify the token from cookies
     const token = request.cookies.get("accessToken")?.value;
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -86,9 +93,12 @@ export async function PUT(request: Request) {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!);
     const userId = (decoded as { id: number }).id;
 
-    // Find the user's processed application
+    // Find the user's processed application or more_details application
     const application = await prisma.application.findFirst({
-      where: { userId, status: "processed" },
+      where: {
+        userId,
+        OR: [{ status: "processed" }, { status: "more_details" }],
+      },
     });
     if (!application) {
       return NextResponse.json(
@@ -97,20 +107,57 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Merge new fields with existing details
+    // Define the template with all keys and default empty strings
+    const template = {
+      firstName: "",
+      middleName: "",
+      lastName: "",
+      dob: "",
+      email: "",
+      phone: "",
+      citizenshipNo: "",
+      citizenshipIssueDate: "",
+      fatherName: "",
+      grandfatherName: "",
+      spouseName: "",
+      province: "",
+      district: "",
+      municipality: "",
+      wardNo: "",
+      temporaryAddress: "",
+      occupation: "",
+      educationQualification: "",
+      workExperience: "",
+      dematId: "",
+      numberOfShares: "",
+      paymentMethod: "",
+      contactPersonName: "",
+      relationship: "",
+      contactPersonPhone: "",
+      paymentReceipt: "",
+      passportPhoto: "",
+      citizenshipDoc: "",
+      signImage: "",
+    };
+
+    // Get existing details from the processed application
     const existingDetails =
       typeof application.details === "string"
         ? JSON.parse(application.details)
         : application.details;
+
+    // Merge new details
     const newDetails = {
+      ...template,
       ...existingDetails,
       ...normalizedFields,
       ...filePaths,
-      // Ensure agreeToTerms is boolean
       agreeToTerms:
         normalizedFields.agreeToTerms === "true" ||
         normalizedFields.agreeToTerms === true,
     };
+
+    console.log("New details to be saved:", newDetails);
 
     // Update the application: merge details and update status to "pending"
     const updatedApplication = await prisma.application.update({

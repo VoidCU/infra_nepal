@@ -50,9 +50,9 @@ export default function ContinueApplicationForm() {
           return;
         }
         if (data.success) {
-          const processedApp = data.applications.find(
-            (app: any) => app.status === "processed"
-          );
+            const processedApp = data.applications.find(
+            (app: any) => app.status === "processed" || app.status === "more_details"
+            );
           if (processedApp) {
             setApplication(processedApp);
           } else {
