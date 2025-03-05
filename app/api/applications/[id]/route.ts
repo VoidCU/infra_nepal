@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 // Get a single application by ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const id = parseInt(params.id, 10);
@@ -34,7 +34,7 @@ export async function GET(
 // Update an application by ID
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const id = parseInt(params.id, 10);

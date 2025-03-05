@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const fadeUpVariant = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0 },
@@ -217,7 +217,7 @@ export default function ContinueApplicationForm() {
               </p>
             </div>
             <p className="mb-4 text-lg">
-              After completing your payment, click "Next" to proceed.
+              After completing your payment, click &quot;Next&quot; to proceed.
             </p>
             <div className="flex justify-end">
               <button

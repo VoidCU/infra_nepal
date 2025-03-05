@@ -2,7 +2,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export default function UserDetailsPage() {
   const { id } = useParams();
   const router = useRouter();

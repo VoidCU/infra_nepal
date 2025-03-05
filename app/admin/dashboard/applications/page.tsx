@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowsUpDownIcon } from "@heroicons/react/24/outline";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Helper to get color-coded classes for status badges
 function getStatusBadgeClass(status: string) {
   switch (status) {
@@ -93,7 +93,7 @@ export default function AdminApplications() {
 
   // Filter applications by search term and status
   const filteredApps = applications.filter((app) => {
-    let details =
+    const details =
       typeof app.details === "string" ? JSON.parse(app.details) : app.details;
     const fullName = (details.firstName + " " + details.lastName).toLowerCase();
     const matchesSearch = fullName.includes(searchTerm.toLowerCase());
@@ -177,15 +177,14 @@ export default function AdminApplications() {
             </thead>
             <tbody>
               {firstStepApps.map((app) => {
-                let details = {};
+                let details: { firstName?: string; lastName?: string } = {};
                 try {
-                  details =
-                    typeof app.details === "string"
-                      ? JSON.parse(app.details)
-                      : app.details;
+                  details = typeof app.details === "string" ? JSON.parse(app.details) : app.details || {};
                 } catch (e) {
                   console.error("Error parsing details", e);
+                  details = {};
                 }
+                
                 return (
                   <tr key={app.id}>
                     <td className="py-2 px-4 border">{app.applicationId}</td>
@@ -251,15 +250,14 @@ export default function AdminApplications() {
             </thead>
             <tbody>
               {secondStepApps.map((app) => {
-                let details = {};
+                let details: { firstName?: string; lastName?: string } = {};
                 try {
-                  details =
-                    typeof app.details === "string"
-                      ? JSON.parse(app.details)
-                      : app.details;
+                  details = typeof app.details === "string" ? JSON.parse(app.details) : app.details || {};
                 } catch (e) {
                   console.error("Error parsing details", e);
+                  details = {};
                 }
+                
                 return (
                   <tr key={app.id}>
                     <td className="py-2 px-4 border">{app.applicationId}</td>
@@ -325,15 +323,14 @@ export default function AdminApplications() {
             </thead>
             <tbody>
               {rejectedApps.map((app) => {
-                let details = {};
+                let details: { firstName?: string; lastName?: string } = {};
                 try {
-                  details =
-                    typeof app.details === "string"
-                      ? JSON.parse(app.details)
-                      : app.details;
+                  details = typeof app.details === "string" ? JSON.parse(app.details) : app.details || {};
                 } catch (e) {
                   console.error("Error parsing details", e);
+                  details = {};
                 }
+                
                 return (
                   <tr key={app.id}>
                     <td className="py-2 px-4 border">{app.applicationId}</td>

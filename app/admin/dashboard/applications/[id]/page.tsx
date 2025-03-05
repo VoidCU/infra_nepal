@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // A simple ImageModal component for displaying full-size images.
 function ImageModal({
   src,
@@ -122,10 +122,6 @@ export default function EditApplicationPage() {
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
-  // Manual status change is not allowed in edit mode. In view mode, direct status buttons are used.
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setStatus(e.target.value);
-  };
 
   // Save edited details (in edit mode, only details and photos; status remains unchanged)
   const handleSave = async () => {

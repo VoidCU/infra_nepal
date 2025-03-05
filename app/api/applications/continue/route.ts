@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import { PassThrough } from "stream";
 import jwt from "jsonwebtoken";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Disable Next.js built-in body parser for multipart/form-data
 export const config = {
   api: {

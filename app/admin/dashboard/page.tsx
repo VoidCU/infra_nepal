@@ -1,7 +1,7 @@
 // /admin/dashboard/page.tsx
 "use client";
 import { useState, useEffect } from "react";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export default function DashboardHome() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
