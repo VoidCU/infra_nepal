@@ -50,7 +50,7 @@ export default function UsersList() {
               <td className="py-2 px-4 border">
                 <button
                   onClick={() =>
-                    router.push(`/admin/dashboard/user/${user.id}`)
+                    router.push(`/admin/dashboard/users/${user.id}`)
                   }
                   className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
                 >

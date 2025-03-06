@@ -66,16 +66,14 @@ export async function PUT(request: Request) {
 
     // Process file uploads and build file paths relative to public folder
     const filePaths: Record<string, string> = {};
-    console.log("Files:", files);
     for (const fieldName in files) {
-      console.log("Field name:", fieldName);
-      
+
       const fileArray = files[fieldName] as formidable.File[]; // ✅ Correctly treat it as an array
       for (const file of fileArray) { // ✅ Loop through each file in the array
-        console.log("File:", file);
+
         
         const filePath = file.filepath || file.path;
-        console.log("File path:", filePath);
+
         
         if (typeof filePath === "string") {
           const relativePath = `/userdocs/${path.basename(filePath)}`;
@@ -83,7 +81,6 @@ export async function PUT(request: Request) {
         }
       }
     }
-    console.log("File paths:", filePaths);
 
     // Retrieve and verify the token from cookies
     const token = request.cookies.get("accessToken")?.value;
@@ -157,7 +154,6 @@ export async function PUT(request: Request) {
         normalizedFields.agreeToTerms === true,
     };
 
-    console.log("New details to be saved:", newDetails);
 
     // Update the application: merge details and update status to "pending"
     const updatedApplication = await prisma.application.update({

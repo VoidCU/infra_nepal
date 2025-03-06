@@ -495,7 +495,7 @@ export default function InitialApplicationForm() {
           >
             <h2 className="text-2xl font-bold text-[#003893] mb-4">Application Submitted</h2>
             <p className="text-lg mb-6">
-              Your application has been submitted successfully. We will email you a payment receipt voucher after confirming that the amount has been deposited in Bank.
+              Your application has been submitted successfully. We will email you for further instruction.
             </p>
             <button
               onClick={handlePopupOk}

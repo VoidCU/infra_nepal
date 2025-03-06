@@ -1,21 +1,114 @@
 "use client";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { motion } from "framer-motion";
+
 const fadeUpVariant = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0 },
 };
 
+// Displays a full-size image in a popup.
+function ImageModal({
+  src,
+  alt,
+  onClose,
+}: {
+  src: string;
+  alt: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-75" onClick={onClose}></div>
+      <div className="relative z-10 p-4">
+        <img src={src} alt={alt} className="max-h-screen max-w-full" />
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 bg-gray-600 text-white px-3 py-1 rounded"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Asks user for confirmation before an action (if needed for status changes).
+function ConfirmationModal({
+  message,
+  onConfirm,
+  onCancel,
+}: {
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onCancel}
+      ></div>
+      <div className="relative bg-white rounded-lg p-6 max-w-sm mx-auto z-10">
+        <h2 className="text-xl font-bold mb-4">Please Confirm</h2>
+        <p className="mb-6">{message}</p>
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={onCancel}
+            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Popup for final success message after submission.
+function Popup({ message, onClose }: { message: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className="relative bg-white rounded-lg p-8 max-w-md mx-auto text-center shadow-lg">
+        <h2 className="text-2xl font-bold text-[#003893] mb-4">Success</h2>
+        <p className="text-lg mb-6">{message}</p>
+        <button
+          onClick={onClose}
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ContinueApplicationForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [application, setApplication] = useState<any>(null);
-  const [error, setError] = useState("");
-  const [currentStep, setCurrentStep] = useState(1);
 
-  // Second-stage form data for new fields (non-editable fields from first stage remain unchanged)
+  // 1) Track whether we're loading or had a fetch error
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(""); // fetch error for loading the application
+
+  // 2) Store the loaded application data
+  const [application, setApplication] = useState<any>(null);
+
+  // 3) Step and submission states
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 4) Validation error for required fields
+  const [validationError, setValidationError] = useState("");
+
+  // 5) secondStepData for fields
   const [secondStepData, setSecondStepData] = useState({
     dematId: "",
     paymentMethod: "",
@@ -25,7 +118,7 @@ export default function ContinueApplicationForm() {
     agreeToTerms: false,
   });
 
-  // For file uploads in Step 4
+  // 6) File data for step 4
   const [fileData, setFileData] = useState({
     paymentReceipt: null as File | null,
     passportPhoto: null as File | null,
@@ -39,7 +132,31 @@ export default function ContinueApplicationForm() {
     signImage: "",
   });
 
-  // Fetch the current processed application for the user
+  // 7) ConfirmationModal (if you need it for some action)
+  const [confirmData, setConfirmData] = useState<{
+    message: string;
+    newStatus: string;
+    show: boolean;
+  }>({ message: "", newStatus: "", show: false });
+
+  // 8) Final popup for success
+  const [popup, setPopup] = useState<{ show: boolean; message: string }>({
+    show: false,
+    message: "",
+  });
+
+  // 9) Image modal for enlarged previews
+  const [modalImage, setModalImage] = useState<{ src: string; alt: string } | null>(null);
+
+  // 10) Check if user is logged in (has an access token)
+  useEffect(() => {
+    const token = document.cookie.split("; ").find((row) => row.startsWith("accessToken="));
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
+
+  // 11) Fetch the user's "processed" or "more_details" application
   useEffect(() => {
     async function fetchProcessedApp() {
       try {
@@ -50,22 +167,23 @@ export default function ContinueApplicationForm() {
           return;
         }
         if (data.success) {
-            const processedApp = data.applications.find(
-            (app: any) => app.status === "processed" || app.status === "more_details"
-            );
+          const processedApp = data.applications.find(
+            (app: any) =>
+              app.status === "processed" || app.status === "more_details"
+          );
           if (processedApp) {
             setApplication(processedApp);
           } else {
-            setError(
+            setFetchError(
               "Your application is not ready to be continued. Please contact support or check your dashboard."
             );
           }
         } else {
-          setError("Unable to fetch your application. Please try again later.");
+          setFetchError("Unable to fetch your application. Please try again later.");
         }
       } catch (err) {
         console.error(err);
-        setError("Failed to fetch your application.");
+        setFetchError("Failed to fetch your application.");
       } finally {
         setLoading(false);
       }
@@ -73,13 +191,44 @@ export default function ContinueApplicationForm() {
     fetchProcessedApp();
   }, [router]);
 
-  const nextStep = () => setCurrentStep((prev) => prev + 1);
-  const prevStep = () => setCurrentStep((prev) => prev - 1);
+  // 12) Validation for each step
+  const validateCurrentStep = (): boolean => {
+    if (currentStep === 2) {
+      if (!secondStepData.dematId.trim()) {
+        setValidationError("Please enter Demat ID.");
+        return false;
+      }
+    }
+    if (currentStep === 4) {
+      if (
+        !fileData.paymentReceipt ||
+        !fileData.passportPhoto ||
+        !fileData.citizenshipDoc ||
+        !fileData.signImage ||
+        !secondStepData.agreeToTerms
+      ) {
+        setValidationError("Please upload all required documents and agree to terms.");
+        return false;
+      }
+    }
+    setValidationError("");
+    return true;
+  };
 
+  const handleNext = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep((prev) => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    setValidationError("");
+    setCurrentStep((prev) => prev - 1);
+  };
+
+  // 13) Input changes
   const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type, checked } = e.target;
     if (type === "checkbox") {
@@ -89,6 +238,7 @@ export default function ContinueApplicationForm() {
     }
   };
 
+  // 14) File changes
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name } = e.target;
     const files = e.target.files;
@@ -99,43 +249,55 @@ export default function ContinueApplicationForm() {
     }
   };
 
-  // On submit, create a FormData object that includes secondStepData and fileData
+  // 15) On form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateCurrentStep()) return;
+    setIsSubmitting(true);
     try {
       const formDataToSend = new FormData();
-      // Append secondStepData fields
       for (const key in secondStepData) {
         formDataToSend.append(key, secondStepData[key]);
       }
-      // Append file fields
       for (const key in fileData) {
         if (fileData[key]) {
           formDataToSend.append(key, fileData[key] as Blob);
         }
       }
-      // Do not set Content-Type manually when sending FormData.
       const res = await fetch("/api/applications/continue", {
         method: "PUT",
         body: formDataToSend,
       });
       const data = await res.json();
       if (data.success) {
-        alert("Application continued successfully");
+        setPopup({ show: true, message: "Application continued successfully" });
+        // You can redirect to a dashboard 
         router.push("/dashboard");
+
+
       } else {
-        setError(data.error || "Submission failed");
+        setValidationError(data.error || "Submission failed");
       }
     } catch (err) {
       console.error(err);
-      setError("An error occurred while submitting your details");
+      setValidationError("An error occurred while submitting your details");
     }
+    setIsSubmitting(false);
   };
 
-  if (loading) return <p>Loading your application...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  // 16) Show loading or fetch error
+  if (loading) {
+    return <p>Loading your application...</p>;
+  }
+  if (fetchError) {
+    return <p className="text-red-500">{fetchError}</p>;
+  }
+  if (!application) {
+    // If there's no error but no application found, show a message
+    return <p className="text-red-500">No application found.</p>;
+  }
 
-  // Calculate share purchase amount (each share costs 100 rupees)
+  // 17) For share calculations
   const numberOfShares = application.details.numberOfShares;
   const sharePrice = 100;
   const totalAmount = numberOfShares * sharePrice;
@@ -144,7 +306,9 @@ export default function ContinueApplicationForm() {
     <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Continue Your Application</h1>
 
-      {/* Display previous details (read-only) */}
+      
+
+      {/* Display previously submitted details (read-only) */}
       <div className="bg-gray-100 p-4 rounded mb-6">
         <h2 className="text-2xl font-bold mb-4">Your Submitted Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -156,16 +320,17 @@ export default function ContinueApplicationForm() {
           ))}
         </div>
       </div>
-
-      {/* Single Form Wrapper for the Multi-Step Form */}
+      {/* Inline validation error (for required fields) */}
+      {validationError && (
+        <p className="text-red-500 font-semibold mb-4">{validationError}</p>
+      )}
+      {/* Multi-step form */}
       <form onSubmit={handleSubmit}>
-        {/* Step 1: Payment Instructions */}
         {currentStep === 1 && (
           <motion.div
             variants={fadeUpVariant}
             initial="hidden"
             animate="visible"
-            viewport={{ once: true }}
             className="bg-white border border-gray-200 shadow-lg rounded-lg p-6 mb-8"
           >
             <h2 className="text-2xl font-bold text-[#003893] mb-4">
@@ -217,12 +382,12 @@ export default function ContinueApplicationForm() {
               </p>
             </div>
             <p className="mb-4 text-lg">
-              After completing your payment, click &quot;Next&quot; to proceed.
+              After completing your payment, click "Next" to proceed.
             </p>
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={nextStep}
+                onClick={handleNext}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition"
               >
                 Next
@@ -231,13 +396,11 @@ export default function ContinueApplicationForm() {
           </motion.div>
         )}
 
-        {/* Step 2: Investment Details */}
         {currentStep === 2 && (
           <motion.div
             variants={fadeUpVariant}
             initial="hidden"
             animate="visible"
-            viewport={{ once: true }}
             className="bg-white border border-gray-200 shadow-lg rounded-lg p-6 mb-8"
           >
             <h2 className="text-2xl font-bold text-[#003893] mb-4">
@@ -274,14 +437,14 @@ export default function ContinueApplicationForm() {
             <div className="flex justify-between">
               <button
                 type="button"
-                onClick={prevStep}
+                onClick={handlePrev}
                 className="bg-gray-600 text-white px-4 py-2 rounded"
               >
                 Back
               </button>
               <button
                 type="button"
-                onClick={nextStep}
+                onClick={handleNext}
                 className="bg-blue-600 text-white px-4 py-2 rounded"
               >
                 Next
@@ -290,20 +453,18 @@ export default function ContinueApplicationForm() {
           </motion.div>
         )}
 
-        {/* Step 3: Contact Person Details */}
         {currentStep === 3 && (
           <motion.div
             variants={fadeUpVariant}
             initial="hidden"
             animate="visible"
-            viewport={{ once: true }}
             className="bg-white border border-gray-200 shadow-lg rounded-lg p-6 mb-8"
           >
             <h2 className="text-2xl font-bold text-[#003893] mb-4">
               Step 3: Contact Person Details (if needed)
             </h2>
             <div className="mb-4">
-              <label className="block mb-1">Contact Person Name*</label>
+              <label className="block mb-1">Contact Person Name</label>
               <input
                 type="text"
                 name="contactPersonName"
@@ -314,7 +475,7 @@ export default function ContinueApplicationForm() {
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-1">Relationship*</label>
+              <label className="block mb-1">Relationship</label>
               <input
                 type="text"
                 name="relationship"
@@ -325,7 +486,7 @@ export default function ContinueApplicationForm() {
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-1">Contact Person Phone*</label>
+              <label className="block mb-1">Contact Person Phone</label>
               <input
                 type="tel"
                 name="contactPersonPhone"
@@ -338,14 +499,14 @@ export default function ContinueApplicationForm() {
             <div className="flex justify-between">
               <button
                 type="button"
-                onClick={prevStep}
+                onClick={handlePrev}
                 className="bg-gray-600 text-white px-4 py-2 rounded"
               >
                 Back
               </button>
               <button
                 type="button"
-                onClick={nextStep}
+                onClick={handleNext}
                 className="bg-blue-600 text-white px-4 py-2 rounded"
               >
                 Next
@@ -354,13 +515,11 @@ export default function ContinueApplicationForm() {
           </motion.div>
         )}
 
-        {/* Step 4: Document Uploads & Agreement */}
         {currentStep === 4 && (
           <motion.div
             variants={fadeUpVariant}
             initial="hidden"
             animate="visible"
-            viewport={{ once: true }}
             className="bg-white border border-gray-200 shadow-lg rounded-lg p-6 mb-8"
           >
             <h2 className="text-2xl font-bold text-[#003893] mb-4">
@@ -381,7 +540,13 @@ export default function ContinueApplicationForm() {
                   <img
                     src={preview.paymentReceipt}
                     alt="Receipt Preview"
-                    className="mt-2 h-24 object-cover rounded"
+                    className="mt-2 h-24 object-cover rounded cursor-pointer"
+                    onClick={() =>
+                      setModalImage({
+                        src: preview.paymentReceipt,
+                        alt: "Receipt Preview",
+                      })
+                    }
                   />
                 )}
               </div>
@@ -399,7 +564,13 @@ export default function ContinueApplicationForm() {
                   <img
                     src={preview.passportPhoto}
                     alt="Passport Preview"
-                    className="mt-2 h-24 object-cover rounded"
+                    className="mt-2 h-24 object-cover rounded cursor-pointer"
+                    onClick={() =>
+                      setModalImage({
+                        src: preview.passportPhoto,
+                        alt: "Passport Preview",
+                      })
+                    }
                   />
                 )}
               </div>
@@ -419,7 +590,13 @@ export default function ContinueApplicationForm() {
                   <img
                     src={preview.citizenshipDoc}
                     alt="Citizenship Preview"
-                    className="mt-2 h-24 object-cover rounded"
+                    className="mt-2 h-24 object-cover rounded cursor-pointer"
+                    onClick={() =>
+                      setModalImage({
+                        src: preview.citizenshipDoc,
+                        alt: "Citizenship Preview",
+                      })
+                    }
                   />
                 )}
               </div>
@@ -437,7 +614,13 @@ export default function ContinueApplicationForm() {
                   <img
                     src={preview.signImage}
                     alt="Signature Preview"
-                    className="mt-2 h-24 object-cover rounded"
+                    className="mt-2 h-24 object-cover rounded cursor-pointer"
+                    onClick={() =>
+                      setModalImage({
+                        src: preview.signImage,
+                        alt: "Signature Preview",
+                      })
+                    }
                   />
                 )}
               </div>
@@ -460,21 +643,56 @@ export default function ContinueApplicationForm() {
             <div className="flex justify-between">
               <button
                 type="button"
-                onClick={prevStep}
+                onClick={handlePrev}
                 className="bg-gray-600 text-white px-4 py-2 rounded"
               >
                 Back
               </button>
               <button
                 type="submit"
-                className="bg-green-600 text-white px-4 py-2 rounded"
+                disabled={isSubmitting}
+                className={`bg-green-600 text-white px-4 py-2 rounded transition ${
+                  isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"
+                }`}
               >
-                Submit Application
+                {isSubmitting ? "Submitting..." : "Submit Application"}
               </button>
             </div>
           </motion.div>
         )}
       </form>
+
+      {/* Confirmation Popup for status change (not used here) */}
+      {confirmData.show && (
+        <ConfirmationModal
+          message={confirmData.message}
+          onConfirm={() => {
+            setConfirmData((prev) => ({ ...prev, show: false }));
+            // Some status change logic if needed
+          }}
+          onCancel={() => setConfirmData({ show: false, newStatus: "", message: "" })}
+        />
+      )}
+
+      {/* Popup after successful update */}
+      {popup.show && (
+        <Popup
+          message={popup.message}
+          onClose={() => {
+            setPopup({ show: false, message: "" });
+            router.refresh();
+          }}
+        />
+      )}
+
+      {/* Image Modal Popup */}
+      {modalImage && (
+        <ImageModal
+          src={modalImage.src}
+          alt={modalImage.alt}
+          onClose={() => setModalImage(null)}
+        />
+      )}
     </div>
   );
 }

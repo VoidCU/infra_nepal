@@ -1,8 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// A simple ImageModal component for displaying full-size images.
+
 function ImageModal({
   src,
   alt,
@@ -68,6 +67,24 @@ function ConfirmationModal({
   );
 }
 
+function Popup({ message, onClose }: { message: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50"></div>
+      <div className="relative bg-white rounded-lg p-8 max-w-md mx-auto text-center shadow-lg">
+        <h2 className="text-2xl font-bold text-[#003893] mb-4">Success</h2>
+        <p className="text-lg mb-6">{message}</p>
+        <button
+          onClick={onClose}
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function EditApplicationPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -122,7 +139,6 @@ export default function EditApplicationPage() {
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
-
   // Save edited details (in edit mode, only details and photos; status remains unchanged)
   const handleSave = async () => {
     try {
@@ -160,8 +176,11 @@ export default function EditApplicationPage() {
       });
       const data = await res.json();
       if (data.success) {
+        // Update local state so the change is reflected immediately.
+        setStatus(confirmData.newStatus);
+        setApplication(data.application); // assuming your API returns the updated application
         setPopup({ show: true, message: "Status updated successfully" });
-        router.refresh();
+        // Optionally, you can also call router.refresh() if you use Next.js data fetching.
       } else {
         setError(data.error || "Status update failed");
       }
@@ -225,24 +244,36 @@ export default function EditApplicationPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex  justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">
           Application {application.applicationId}
         </h1>
+        </div>
+        <div className="flex justify-end mb-6">
         <div className="flex items-center space-x-2">
           {/* Direct status change buttons (only in view mode) */}
           {!editMode && application.status === "applied" && (
-            <button
-              onClick={() =>
-                handleDirectStatusChange(
-                  "processed",
-                  "Accept and start 2nd step?"
-                )
-              }
-              className="bg-green-600 text-white px-4 py-2 rounded"
-            >
-              Accept & Start 2nd Step
-            </button>
+            <>
+              <button
+                onClick={() =>
+                  handleDirectStatusChange(
+                    "processed",
+                    "Accept and start 2nd step?"
+                  )
+                }
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+              >
+                Accept & Start 2nd Step
+              </button>
+              <button
+                onClick={() =>
+                  handleDirectStatusChange("cancelled", "Reject this application?")
+                }
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+              >
+                Reject
+              </button>
+            </>
           )}
           {!editMode && application.status === "pending" && (
             <>
@@ -250,7 +281,7 @@ export default function EditApplicationPage() {
                 onClick={() =>
                   handleDirectStatusChange("verified", "Accept this application?")
                 }
-                className="bg-green-600 text-white px-4 py-2 rounded"
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
               >
                 Accept
               </button>
@@ -261,7 +292,7 @@ export default function EditApplicationPage() {
                     "Request more details?"
                   )
                 }
-                className="bg-yellow-600 text-white px-4 py-2 rounded"
+                className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition"
               >
                 Request More Details
               </button>
@@ -269,17 +300,17 @@ export default function EditApplicationPage() {
                 onClick={() =>
                   handleDirectStatusChange("cancelled", "Reject this application?")
                 }
-                className="bg-red-600 text-white px-4 py-2 rounded"
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
               >
                 Reject
               </button>
             </>
           )}
-          {/* In view mode, a separate "Edit Details" button toggles editMode */}
+          {/* In view mode, an "Edit Details" button toggles editMode */}
           {!editMode && (
             <button
               onClick={() => setEditMode(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
             >
               Edit Details
             </button>
@@ -290,11 +321,7 @@ export default function EditApplicationPage() {
       {/* Status Section - In edit mode, status is shown as read-only text */}
       <div className="mb-6">
         <label className="block font-semibold mb-1">Status</label>
-        {editMode ? (
-          <p className="border p-2 rounded">{status}</p>
-        ) : (
-          <p className="border p-2 rounded">{status}</p>
-        )}
+        <p className="border p-2 rounded">{status}</p>
       </div>
 
       {/* View/Edit Basic & Family Details */}
@@ -336,7 +363,6 @@ export default function EditApplicationPage() {
               {secondStepFields.map(({ label, key }) => (
                 <div key={key}>
                   <label className="block font-semibold">{label}</label>
-                  {/* For image fields, in edit mode allow text input (URL) so admin can override if needed */}
                   {key === "paymentReceipt" ||
                   key === "passportPhoto" ||
                   key === "citizenshipDoc" ||
@@ -371,12 +397,11 @@ export default function EditApplicationPage() {
                     key === "citizenshipDoc" ||
                     key === "signImage" ? (
                       formData[key] ? (
-                        // Image is clickable to open a modal
                         <img
                           src={formData[key]}
                           alt={label}
                           className="h-24 object-cover rounded cursor-pointer"
-                          onClick={() => handleImageClick(formData[key], label)}
+                          onClick={() => setModalImage({ src: formData[key], alt: label })}
                         />
                       ) : (
                         "-"
@@ -415,19 +440,13 @@ export default function EditApplicationPage() {
 
       {/* Popup after successful update */}
       {popup.show && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="absolute inset-0 bg-black opacity-50"></div>
-          <div className="relative bg-white rounded-lg p-8 max-w-md mx-auto text-center shadow-lg">
-            <h2 className="text-2xl font-bold text-[#003893] mb-4">Success</h2>
-            <p className="text-lg mb-6">{popup.message}</p>
-            <button
-              onClick={() => setPopup({ show: false, message: "" })}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
-            >
-              OK
-            </button>
-          </div>
-        </div>
+        <Popup
+          message={popup.message}
+          onClose={() => {
+            setPopup({ show: false, message: "" });
+            router.refresh();
+          }}
+        />
       )}
 
       {/* Image Modal Popup */}
