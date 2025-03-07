@@ -146,8 +146,11 @@ export default function InitialApplicationForm() {
 
   return (
     <div className="pt-20 max-w-3xl mx-auto p-4">
-      <h1 className="text-3xl font-bold text-center mb-8">Apply for Share Purchase</h1>
-      
+      <h1 className="text-3xl font-bold text-center mb-4 mt-4">Apply for Share Purchase</h1>
+      <p className=" text-center">
+        Please fill in the form below to apply for purchasing shares in Infra Nepal Development Fund.
+      </p>
+      <p className="mb-2 text-end">To check applied form status go to <a href="/dashboard" className="text-blue-800">Dashboard</a></p>
       {/* Error Display */}
       {errorMsg && (
         <div className="text-center mb-4">

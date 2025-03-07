@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
 
 const prisma = new PrismaClient();
 
-export async function GET(request: Request) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: Request) {
   try {
-    // Retrieve the access token from cookies
-    const token = request.cookies.get("accessToken")?.value;
+    // Retrieve the access token from cookies using the Next.js cookies helper
+    const cookieStore = await cookies();
+    const token = cookieStore.get("accessToken")?.value;
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

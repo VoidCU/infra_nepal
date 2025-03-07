@@ -8,7 +8,8 @@ export async function GET(
   context: { params: Promise<{ id: string }> } // Ensure this type aligns with the expected `RouteContext`
 ) {
   try {
-    const id = parseInt(context.params.id, 10);
+    const params = await context.params; // Await the params first
+    const id = parseInt(params.id, 10);
     const user = await prisma.user.findUnique({
       where: { id },
     });
@@ -32,7 +33,8 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(context.params.id, 10);
+    const params = await context.params;
+    const id = parseInt(params.id, 10);
     const data = await request.json();
     const updatedUser = await prisma.user.update({
       where: { id },

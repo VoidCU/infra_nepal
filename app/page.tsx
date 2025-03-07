@@ -30,7 +30,7 @@ export default function HomePage() {
             Infra Nepal Development Fund is a multinational investment fund dedicated to fostering sustainable growth and innovation within Nepal.
           </p>
           <Link
-            href="/contact"
+            href="/apply"
             className="inline-block bg-[#DC143C] hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-full text-lg transition-shadow shadow-lg hover:shadow-xl"
           >
             Join Us

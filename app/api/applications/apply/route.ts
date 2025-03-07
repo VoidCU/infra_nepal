@@ -80,7 +80,7 @@ export async function POST(request: Request) {
         from: process.env.EMAIL_USER,
         to: email,
         subject: "Your Account Password",
-        text: `Welcome! Your new password is: ${newPassword}. Please log in and change your password immediately.`,
+        text: `Welcome! Your new password is: "${newPassword}". Please log in and change your password immediately.`,
       };
 
       await transporter.sendMail(mailOptions);

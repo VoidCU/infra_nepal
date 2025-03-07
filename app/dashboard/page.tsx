@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function DetailsModal({ app, onClose }: { app: any; onClose: () => void }) {
   let details: any = {};
   try {
@@ -191,9 +191,7 @@ export default function UserDashboard() {
     fetchApplications();
   }, []);
 
-  const handleCloseModal = () => {
-    setSelectedApp(null);
-  };
+ 
 
   const handleLogout = async () => {
     const res = await fetch("/api/logout", { method: "POST" });
@@ -237,6 +235,8 @@ export default function UserDashboard() {
           : app.details;
     } catch (err) {
       details = {};
+      console.error("Error parsing application details", err);
+      // console.error("Error parsing application details", err);
     }
     return acc + (parseInt(details.numberOfShares, 10) || 0);
   }, 0);
@@ -252,6 +252,7 @@ export default function UserDashboard() {
             : app.details;
       } catch (err) {
         details = {};
+        console.error("Error parsing application details", err);
       }
       return acc + (parseInt(details.numberOfShares, 10) || 0);
     }, 0);
@@ -267,6 +268,7 @@ export default function UserDashboard() {
             : app.details;
       } catch (err) {
         details = {};
+        console.error("Error parsing application details", err);
       }
       return acc + (parseInt(details.numberOfShares, 10) || 0);
     }, 0);
@@ -413,25 +415,4 @@ export default function UserDashboard() {
       )}
     </div>
   );
-}
-
-// Handler for change password (inside the component so it can update popup state)
-async function handleChangePasswordSubmit(newPassword: string) {
-  try {
-    const res = await fetch("/api/change-password", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ newPassword }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      // Instead of alert, show the popup
-      setPopup({ show: true, message: "Password changed successfully" });
-    } else {
-      setPopup({ show: true, message: data.error || "Password change failed" });
-    }
-  } catch (error) {
-    console.error("Change password error:", error);
-    setPopup({ show: true, message: "An error occurred while changing your password" });
-  }
 }

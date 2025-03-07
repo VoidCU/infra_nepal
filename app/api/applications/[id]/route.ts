@@ -4,17 +4,19 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Get a single application by ID
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id, 10);
+    const resolvedParams = await params; // Await the params first
+    const id = parseInt(resolvedParams.id, 10);
+
     const application = await prisma.application.findUnique({
       where: { id },
       include: { user: true },
     });
+
     if (!application) {
       return NextResponse.json(
         { error: "Application not found" },
@@ -31,13 +33,13 @@ export async function GET(
   }
 }
 
-// Update an application by ID
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id, 10);
+    const resolvedParams = await params; // Await params before using it
+    const id = parseInt(resolvedParams.id, 10);
     const { details, status } = await request.json();
 
     const updatedApplication = await prisma.application.update({

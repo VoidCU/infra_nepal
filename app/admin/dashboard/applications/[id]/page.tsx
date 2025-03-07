@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function ImageModal({
   src,
   alt,
@@ -192,11 +192,6 @@ export default function EditApplicationPage() {
 
   const cancelStatusChange = () => {
     setConfirmData({ show: false, newStatus: "", message: "" });
-  };
-
-  // When an image is clicked, open the image modal.
-  const handleImageClick = (src: string, alt: string) => {
-    setModalImage({ src, alt });
   };
 
   if (loading) return <p>Loading...</p>;

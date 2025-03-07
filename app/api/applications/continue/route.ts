@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { PassThrough } from "stream";
 import jwt from "jsonwebtoken";
+import { IncomingMessage } from "http";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Disable Next.js built-in body parser for multipart/form-data
 export const config = {
@@ -47,7 +48,9 @@ export async function PUT(request: Request) {
     // Wrap form.parse in a Promise
     const parseForm = (): Promise<{ fields: any; files: any }> => {
       return new Promise((resolve, reject) => {
-        form.parse(stream, (err, fields, files) => {
+        // Cast the PassThrough stream as an IncomingMessage for formidable
+        const reqForFormidable = stream as unknown as IncomingMessage;
+        form.parse(reqForFormidable, (err, fields, files) => {
           if (err) reject(err);
           else resolve({ fields, files });
         });
@@ -55,7 +58,6 @@ export async function PUT(request: Request) {
     };
 
     const { fields, files } = await parseForm();
-
 
     // Normalize fields: if a field value is an array, pick its first element.
     const normalizedFields: Record<string, any> = {};
@@ -67,14 +69,9 @@ export async function PUT(request: Request) {
     // Process file uploads and build file paths relative to public folder
     const filePaths: Record<string, string> = {};
     for (const fieldName in files) {
-
-      const fileArray = files[fieldName] as formidable.File[]; // ✅ Correctly treat it as an array
-      for (const file of fileArray) { // ✅ Loop through each file in the array
-
-        
-        const filePath = file.filepath || file.path;
-
-        
+      const fileArray = files[fieldName] as formidable.File[];
+      for (const file of fileArray) {
+        const filePath = file.filepath;
         if (typeof filePath === "string") {
           const relativePath = `/userdocs/${path.basename(filePath)}`;
           filePaths[fieldName] = relativePath;
@@ -83,7 +80,13 @@ export async function PUT(request: Request) {
     }
 
     // Retrieve and verify the token from cookies
-    const token = request.cookies.get("accessToken")?.value;
+    const cookieHeader = request.headers.get("cookie");
+    const cookies = cookieHeader?.split(";").reduce((acc, cookie) => {
+      const [name, ...rest] = cookie.split("=");
+      acc[name.trim()] = rest.join("=").trim();
+      return acc;
+    }, {} as Record<string, string>) || {};
+    const token = cookies["accessToken"];
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -153,7 +156,6 @@ export async function PUT(request: Request) {
         normalizedFields.agreeToTerms === "true" ||
         normalizedFields.agreeToTerms === true,
     };
-
 
     // Update the application: merge details and update status to "pending"
     const updatedApplication = await prisma.application.update({

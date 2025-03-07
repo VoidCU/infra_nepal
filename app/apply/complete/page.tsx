@@ -2,11 +2,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const fadeUpVariant = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0 },
 };
+
+const MAX_FILE_SIZE = 1.5 * 1024 * 1024; // 1.5 MB
 
 // Displays a full-size image in a popup.
 function ImageModal({
@@ -108,7 +110,23 @@ export default function ContinueApplicationForm() {
   // 4) Validation error for required fields
   const [validationError, setValidationError] = useState("");
 
-  // 5) secondStepData for fields
+  // State for file previews
+  const [preview, setPreview] = useState({
+    paymentReceipt: "",
+    passportPhoto: "",
+    citizenshipDoc: "",
+    signImage: "",
+  });
+
+  // State for tracking uploading status per field
+  const [uploading, setUploading] = useState({
+    paymentReceipt: false,
+    passportPhoto: false,
+    citizenshipDoc: false,
+    signImage: false,
+  });
+
+  // 5) secondStepData for non‑file fields
   const [secondStepData, setSecondStepData] = useState({
     dematId: "",
     paymentMethod: "",
@@ -116,16 +134,7 @@ export default function ContinueApplicationForm() {
     relationship: "",
     contactPersonPhone: "",
     agreeToTerms: false,
-  });
-
-  // 6) File data for step 4
-  const [fileData, setFileData] = useState({
-    paymentReceipt: null as File | null,
-    passportPhoto: null as File | null,
-    citizenshipDoc: null as File | null,
-    signImage: null as File | null,
-  });
-  const [preview, setPreview] = useState({
+    // Cloudinary URLs will be stored here
     paymentReceipt: "",
     passportPhoto: "",
     citizenshipDoc: "",
@@ -201,10 +210,10 @@ export default function ContinueApplicationForm() {
     }
     if (currentStep === 4) {
       if (
-        !fileData.paymentReceipt ||
-        !fileData.passportPhoto ||
-        !fileData.citizenshipDoc ||
-        !fileData.signImage ||
+        !secondStepData.paymentReceipt ||
+        !secondStepData.passportPhoto ||
+        !secondStepData.citizenshipDoc ||
+        !secondStepData.signImage ||
         !secondStepData.agreeToTerms
       ) {
         setValidationError("Please upload all required documents and agree to terms.");
@@ -230,40 +239,74 @@ export default function ContinueApplicationForm() {
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target as HTMLInputElement;
     if (type === "checkbox") {
+      const { checked } = e.target as HTMLInputElement;
       setSecondStepData((prev) => ({ ...prev, [name]: checked }));
     } else {
       setSecondStepData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  // 14) File changes
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name } = e.target;
-    const files = e.target.files;
-    if (files && files[0]) {
-      const file = files[0];
-      setFileData((prev) => ({ ...prev, [name]: file }));
-      setPreview((prev) => ({ ...prev, [name]: URL.createObjectURL(file) }));
+  // 14) Basic file upload function with file size and type validation.
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    fieldName: string
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      alert("File size exceeds 1.5MB limit");
+      return;
+    }
+
+    // Validate file type (allow only images)
+    if (!file.type.startsWith("image/")) {
+      alert("Only image files are allowed");
+      return;
+    }
+
+    // Set uploading state to true for this field.
+    setUploading((prev) => ({ ...prev, [fieldName]: true }));
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+
+    try {
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      const data = await response.json();
+      if (data.secure_url) {
+        setSecondStepData((prev) => ({ ...prev, [fieldName]: data.secure_url }));
+        setPreview((prev) => ({ ...prev, [fieldName]: data.secure_url }));
+      } else {
+        console.error("Upload failed", data);
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    } finally {
+      // Reset uploading state for this field.
+      setUploading((prev) => ({ ...prev, [fieldName]: false }));
     }
   };
 
-  // 15) On form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateCurrentStep()) return;
     setIsSubmitting(true);
     try {
       const formDataToSend = new FormData();
-      for (const key in secondStepData) {
-        formDataToSend.append(key, secondStepData[key]);
-      }
-      for (const key in fileData) {
-        if (fileData[key]) {
-          formDataToSend.append(key, fileData[key] as Blob);
-        }
-      }
+      (Object.keys(secondStepData) as (keyof typeof secondStepData)[]).forEach((key) => {
+        formDataToSend.append(key, secondStepData[key].toString());
+      });
       const res = await fetch("/api/applications/continue", {
         method: "PUT",
         body: formDataToSend,
@@ -271,9 +314,8 @@ export default function ContinueApplicationForm() {
       const data = await res.json();
       if (data.success) {
         setPopup({ show: true, message: "Application continued successfully" });
-        // You can redirect to a dashboard 
-        router.push("/dashboard");
-
+        // after ok clicked in popup redirect to dashboard
+        
 
       } else {
         setValidationError(data.error || "Submission failed");
@@ -306,8 +348,6 @@ export default function ContinueApplicationForm() {
     <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Continue Your Application</h1>
 
-      
-
       {/* Display previously submitted details (read-only) */}
       <div className="bg-gray-100 p-4 rounded mb-6">
         <h2 className="text-2xl font-bold mb-4">Your Submitted Details</h2>
@@ -315,7 +355,7 @@ export default function ContinueApplicationForm() {
           {Object.entries(application.details).map(([key, value]) => (
             <div key={key}>
               <p className="font-semibold capitalize">{key}</p>
-              <p>{value || "-"}</p>
+              <p className="break-words">{String(value) || "-"}</p>
             </div>
           ))}
         </div>
@@ -382,7 +422,7 @@ export default function ContinueApplicationForm() {
               </p>
             </div>
             <p className="mb-4 text-lg">
-              After completing your payment, click "Next" to proceed.
+              After completing your payment, click &quot;Next&quot; to proceed.
             </p>
             <div className="flex justify-end">
               <button
@@ -525,16 +565,14 @@ export default function ContinueApplicationForm() {
             <h2 className="text-2xl font-bold text-[#003893] mb-4">
               Step 4: Upload Documents & Agreement
             </h2>
-            <div className="grid gap-4 mb-4">
+            <div className="grid gap-4 mb-4 grid-cols-1 md:grid-cols-2">
               <div>
                 <label className="block mb-1">Payment Receipt Photo*</label>
                 <input
                   type="file"
-                  name="paymentReceipt"
-                  onChange={handleFileChange}
-                  className="w-full border p-2 rounded"
-                  accept="image/*"
-                  required
+                  id="paymentReceipt"
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(e, "paymentReceipt")}
                 />
                 {preview.paymentReceipt && (
                   <img
@@ -549,16 +587,25 @@ export default function ContinueApplicationForm() {
                     }
                   />
                 )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    document.getElementById("paymentReceipt")?.click()
+                  }
+                  className="bg-blue-600 text-white px-4 py-2 rounded"
+                  disabled={uploading.paymentReceipt}
+                >
+                  {uploading.paymentReceipt ? "Uploading..." : "Upload Payment Receipt"}
+                </button>
+                
               </div>
               <div>
                 <label className="block mb-1">Passport Size Photo*</label>
                 <input
                   type="file"
-                  name="passportPhoto"
-                  onChange={handleFileChange}
-                  className="w-full border p-2 rounded"
-                  accept="image/*"
-                  required
+                  id="passportPhoto"
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(e, "passportPhoto")}
                 />
                 {preview.passportPhoto && (
                   <img
@@ -573,6 +620,17 @@ export default function ContinueApplicationForm() {
                     }
                   />
                 )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    document.getElementById("passportPhoto")?.click()
+                  }
+                  className="bg-blue-600 text-white px-4 py-2 rounded"
+                  disabled={uploading.passportPhoto}
+                >
+                  {uploading.passportPhoto ? "Uploading..." : "Upload Passport Photo"}
+                </button>
+                
               </div>
               <div>
                 <label className="block mb-1">
@@ -580,11 +638,9 @@ export default function ContinueApplicationForm() {
                 </label>
                 <input
                   type="file"
-                  name="citizenshipDoc"
-                  onChange={handleFileChange}
-                  className="w-full border p-2 rounded"
-                  accept="image/*,application/pdf"
-                  required
+                  id="citizenshipDoc"
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(e, "citizenshipDoc")}
                 />
                 {preview.citizenshipDoc && (
                   <img
@@ -599,16 +655,25 @@ export default function ContinueApplicationForm() {
                     }
                   />
                 )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    document.getElementById("citizenshipDoc")?.click()
+                  }
+                  className="bg-blue-600 text-white px-4 py-2 rounded"
+                  disabled={uploading.citizenshipDoc}
+                >
+                  {uploading.citizenshipDoc ? "Uploading..." : "Upload Citizenship Document"}
+                </button>
+                
               </div>
               <div>
                 <label className="block mb-1">Signature Image*</label>
                 <input
                   type="file"
-                  name="signImage"
-                  onChange={handleFileChange}
-                  className="w-full border p-2 rounded"
-                  accept="image/*"
-                  required
+                  id="signImage"
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(e, "signImage")}
                 />
                 {preview.signImage && (
                   <img
@@ -623,6 +688,15 @@ export default function ContinueApplicationForm() {
                     }
                   />
                 )}
+                <button
+                  type="button"
+                  onClick={() => document.getElementById("signImage")?.click()}
+                  className="bg-blue-600 text-white px-4 py-2 rounded"
+                  disabled={uploading.signImage}
+                >
+                  {uploading.signImage ? "Uploading..." : "Upload Signature Image"}
+                </button>
+                
               </div>
             </div>
             <div className="mb-4">
@@ -680,7 +754,7 @@ export default function ContinueApplicationForm() {
           message={popup.message}
           onClose={() => {
             setPopup({ show: false, message: "" });
-            router.refresh();
+            router.push("/dashboard");
           }}
         />
       )}

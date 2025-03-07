@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function Popup({ message, onClose }: { message: string; onClose: () => void }) {
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
