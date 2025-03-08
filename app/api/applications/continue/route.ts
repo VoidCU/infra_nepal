@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import formidable from "formidable";
-import fs from "fs";
 import path from "path";
 import { PassThrough } from "stream";
 import jwt from "jsonwebtoken";
