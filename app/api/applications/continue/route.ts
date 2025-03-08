@@ -15,12 +15,6 @@ export const config = {
 };
 
 const prisma = new PrismaClient();
-const uploadDir = path.join(process.cwd(), "public", "userdocs");
-
-// Ensure the upload directory exists
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
 
 // Convert Next.js Request to Node.js stream using PassThrough
 async function requestToStream(req: Request): Promise<PassThrough> {
@@ -41,8 +35,6 @@ export async function PUT(request: Request) {
     const stream = await requestToStream(request);
     const form = formidable({
       multiples: false,
-      uploadDir,
-      keepExtensions: true,
     });
 
     // Wrap form.parse in a Promise
