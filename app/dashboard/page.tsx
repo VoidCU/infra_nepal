@@ -276,6 +276,11 @@ export default function UserDashboard() {
   return (
     <div className="pt-20 max-w-6xl mx-auto p-4">
       <div className="flex justify-end items-center my-8 space-x-4">
+        <button>
+          <a href="/apply" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+            Request New Shares
+          </a>
+        </button>
         <button
           onClick={() => setShowChangePasswordModal(true)}
           className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"
