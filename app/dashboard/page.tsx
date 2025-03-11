@@ -24,8 +24,11 @@ function DetailsModal({ app, onClose }: { app: any; onClose: () => void }) {
         <h2 className="text-2xl font-bold mb-4">Application Details</h2>
         <div className="space-y-2">
           <p>
-            <strong>Name:</strong> {details.firstName} {details.lastName}
+            <strong>Application ID:</strong> {app.applicationId}
           </p>
+            <p>
+            <strong>Name:</strong> {details.firstName} {details.middleName ? details.middleName + " " : ""}{details.lastName}
+            </p>
           <p>
             <strong>Email:</strong> {details.email}
           </p>
@@ -39,8 +42,7 @@ function DetailsModal({ app, onClose }: { app: any; onClose: () => void }) {
             <strong>Citizenship No:</strong> {details.citizenshipNo}
           </p>
           <p>
-            <strong>Address:</strong> {details.municipality} - {details.wardNo},{" "}
-            {details.district}, {details.province}
+            <strong>Address:</strong> {details.address}
           </p>
           <p>
             <strong>Occupation:</strong> {details.occupation}
@@ -276,11 +278,9 @@ export default function UserDashboard() {
   return (
     <div className="pt-20 max-w-6xl mx-auto p-4">
       <div className="flex justify-end items-center my-8 space-x-4">
-        <button>
-          <a href="/apply" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+        <a href="/apply" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
             Request New Shares
-          </a>
-        </button>
+        </a>
         <button
           onClick={() => setShowChangePasswordModal(true)}
           className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"

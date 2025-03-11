@@ -14,20 +14,18 @@ export async function POST(request: Request) {
       dob,
       email,
       phone,
+      country,
       citizenshipNo,
       citizenshipIssueDate,
+      passportNumber,
+      NRNNumber,
       fatherName,
       grandfatherName,
       spouseName,
-      province,
-      district,
-      municipality,
-      wardNo,
-      temporaryAddress,
+      address,
       occupation,
       educationQualification,
       workExperience,
-      dematId,
       numberOfShares,
     } = await request.json();
 
@@ -67,7 +65,6 @@ export async function POST(request: Request) {
       });
 
       // Send the new password to the user's email using nodemailer.
-      // Configure the transporter as per your email service provider.
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -89,29 +86,26 @@ export async function POST(request: Request) {
     // Create the new application record with status "applied"
     const application = await prisma.application.create({
       data: {
-        applicationId: `APP-${Date.now()}`, // example unique ID generation
+        applicationId: `APP-${Date.now()}`,
         details: {
-          // Store only the first part of the details in JSON
           firstName,
           middleName,
           lastName,
           dob,
           email,
           phone,
+          country,
           citizenshipNo,
           citizenshipIssueDate,
+          passportNumber,
+          NRNNumber,
           fatherName,
           grandfatherName,
           spouseName,
-          province,
-          district,
-          municipality,
-          wardNo,
-          temporaryAddress,
+          address,
           occupation,
           educationQualification,
           workExperience,
-          dematId,
           numberOfShares,
         },
         status: "applied",

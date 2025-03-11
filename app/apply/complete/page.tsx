@@ -3,12 +3,29 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 const fadeUpVariant = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0 },
 };
 
 const MAX_FILE_SIZE = 1.5 * 1024 * 1024; // 1.5 MB
+
+// Reusable collapsible section component
+function CollapsibleSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const [collapsed, setCollapsed] = useState(true);
+  return (
+    <div className="bg-gray-100 p-6 rounded mb-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold mb-2">{title}</h2>
+        <button onClick={() => setCollapsed(!collapsed)} className="text-blue-600 underline">
+          {collapsed ? "Expand" : "Minimize"}
+        </button>
+      </div>
+      {!collapsed && children}
+    </div>
+  );
+}
 
 // Displays a full-size image in a popup.
 function ImageModal({
@@ -202,12 +219,6 @@ export default function ContinueApplicationForm() {
 
   // 12) Validation for each step
   const validateCurrentStep = (): boolean => {
-    if (currentStep === 2) {
-      if (!secondStepData.dematId.trim()) {
-        setValidationError("Please enter Demat ID.");
-        return false;
-      }
-    }
     if (currentStep === 4) {
       if (
         !secondStepData.paymentReceipt ||
@@ -314,9 +325,6 @@ export default function ContinueApplicationForm() {
       const data = await res.json();
       if (data.success) {
         setPopup({ show: true, message: "Application continued successfully" });
-        // after ok clicked in popup redirect to dashboard
-        
-
       } else {
         setValidationError(data.error || "Submission failed");
       }
@@ -335,7 +343,6 @@ export default function ContinueApplicationForm() {
     return <p className="text-red-500">{fetchError}</p>;
   }
   if (!application) {
-    // If there's no error but no application found, show a message
     return <p className="text-red-500">No application found.</p>;
   }
 
@@ -345,21 +352,130 @@ export default function ContinueApplicationForm() {
   const totalAmount = numberOfShares * sharePrice;
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto p-4 mt-20">
       <h1 className="text-3xl font-bold mb-6">Continue Your Application</h1>
 
-      {/* Display previously submitted details (read-only) */}
-      <div className="bg-gray-100 p-4 rounded mb-6">
-        <h2 className="text-2xl font-bold mb-4">Your Submitted Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.entries(application.details).map(([key, value]) => (
-            <div key={key}>
-              <p className="font-semibold capitalize">{key}</p>
-              <p className="break-words">{String(value) || "-"}</p>
+      {/* Collapsible display of previously submitted details */}
+      <CollapsibleSection title="Your Submitted Details">
+        {/* Personal Information */}
+        <div className="mb-6 bg-white p-2 rounded shadow">
+          <h3 className="text-xl font-semibold mb-2">Personal Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <span className="font-semibold">First Name:</span>
+              <p className="mt-1">{application.details.firstName || "-"}</p>
             </div>
-          ))}
+            <div>
+              <span className="font-semibold">Middle Name:</span>
+              <p className="mt-1">{application.details.middleName || "-"}</p>
+            </div>
+            <div>
+              <span className="font-semibold">Last Name:</span>
+              <p className="mt-1">{application.details.lastName || "-"}</p>
+            </div>
+            <div>
+              <span className="font-semibold">Date of Birth:</span>
+              <p className="mt-1">{application.details.dob || "-"}</p>
+            </div>
+            <div>
+              <span className="font-semibold">Email:</span>
+              <p className="mt-1">{application.details.email || "-"}</p>
+            </div>
+            <div>
+              <span className="font-semibold">Phone:</span>
+              <p className="mt-1">{application.details.phone || "-"}</p>
+            </div>
+            <div>
+              <span className="font-semibold">Country:</span>
+              <p className="mt-1">{application.details.country || "-"}</p>
+            </div>
+          </div>
         </div>
-      </div>
+
+        {/* Identity Details */}
+        <div className="mb-6 bg-white p-2 rounded shadow">
+          <h3 className="text-xl font-semibold mb-2">Identity Details</h3>
+          {application.details.country === "Nepal" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span className="font-semibold">Citizenship Number:</span>
+                <p className="mt-1">{application.details.citizenshipNo || "-"}</p>
+              </div>
+              <div>
+                <span className="font-semibold">Citizenship Issue Date:</span>
+                <p className="mt-1">{application.details.citizenshipIssueDate || "-"}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span className="font-semibold">Passport Number:</span>
+                <p className="mt-1">{application.details.passportNumber || "-"}</p>
+              </div>
+              <div>
+                <span className="font-semibold">NRN Number:</span>
+                <p className="mt-1">{application.details.NRNNumber || "-"}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Family Details */}
+        <div className="mb-6 bg-white p-2 rounded shadow">
+          <h3 className="text-xl font-semibold mb-2">Family Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <span className="font-semibold">Father&apos;s Name:</span>
+              <p className="mt-1">{application.details.fatherName || "-"}</p>
+            </div>
+            <div>
+              <span className="font-semibold">Grandfather&apos;s Name:</span>
+              <p className="mt-1">{application.details.grandfatherName || "-"}</p>
+            </div>
+            <div>
+              <span className="font-semibold">Spouse&apos;s Name:</span>
+              <p className="mt-1">{application.details.spouseName || "-"}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Address */}
+        <div className="mb-6 bg-white p-2 rounded shadow">
+          <h3 className="text-xl font-semibold mb-2">Address</h3>
+          <p className="break-words">{application.details.address || "-"}</p>
+        </div>
+
+        {/* Professional Details */}
+        <div className="mb-6 bg-white p-2 rounded shadow">
+          <h3 className="text-xl font-semibold mb-2">Professional Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <span className="font-semibold">Occupation:</span>
+              <p className="mt-1">{application.details.occupation || "-"}</p>
+            </div>
+            <div>
+              <span className="font-semibold">Education Qualification:</span>
+              <p className="mt-1">{application.details.educationQualification || "-"}</p>
+            </div>
+            <div>
+              <span className="font-semibold">Work Experience:</span>
+              <p className="mt-1">{application.details.workExperience || "-"}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Investment Details */}
+        <div className="mb-6 bg-white p-2 rounded shadow">
+          <h3 className="text-xl font-semibold mb-2">Investment Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <span className="font-semibold">Number of Shares:</span>
+              <p className="mt-1">{application.details.numberOfShares || "-"}</p>
+            </div>
+          </div>
+        </div>
+      </CollapsibleSection>
+
       {/* Inline validation error (for required fields) */}
       {validationError && (
         <p className="text-red-500 font-semibold mb-4">{validationError}</p>
@@ -447,7 +563,7 @@ export default function ContinueApplicationForm() {
               Step 2: Investment Details
             </h2>
             <div className="mb-4">
-              <label className="block mb-1">Demat ID*</label>
+              <label className="block mb-1">Demat ID (if any)</label>
               <input
                 type="text"
                 name="dematId"
@@ -597,7 +713,6 @@ export default function ContinueApplicationForm() {
                 >
                   {uploading.paymentReceipt ? "Uploading..." : "Upload Payment Receipt"}
                 </button>
-                
               </div>
               <div>
                 <label className="block mb-1">Passport Size Photo*</label>
@@ -630,7 +745,6 @@ export default function ContinueApplicationForm() {
                 >
                   {uploading.passportPhoto ? "Uploading..." : "Upload Passport Photo"}
                 </button>
-                
               </div>
               <div>
                 <label className="block mb-1">
@@ -665,7 +779,6 @@ export default function ContinueApplicationForm() {
                 >
                   {uploading.citizenshipDoc ? "Uploading..." : "Upload Citizenship Document"}
                 </button>
-                
               </div>
               <div>
                 <label className="block mb-1">Signature Image*</label>
@@ -696,7 +809,6 @@ export default function ContinueApplicationForm() {
                 >
                   {uploading.signImage ? "Uploading..." : "Upload Signature Image"}
                 </button>
-                
               </div>
             </div>
             <div className="mb-4">

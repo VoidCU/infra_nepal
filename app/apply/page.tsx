@@ -1,12 +1,148 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { countries } from "@/data/countries";
 
 const fadeUpVariant = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0 },
 };
+
+// AddressFields is now a controlled component which receives the addressFields value and updater from the parent.
+function AddressFields({
+  country,
+  addressFields,
+  setAddressFields,
+}: {
+  country: string;
+  addressFields: { [key: string]: string };
+  setAddressFields: React.Dispatch<React.SetStateAction<{
+    province: string;
+    district: string;
+    municipality: string;
+    wardNo: string;
+    street: string;
+    city: string;
+    region: string;
+    postalCode: string;
+  }>>;
+}) {
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const newFields = { ...addressFields, [name]: value };
+    setAddressFields(newFields as {
+      province: string;
+      district: string;
+      municipality: string;
+      wardNo: string;
+      street: string;
+      city: string;
+      region: string;
+      postalCode: string;
+    });
+  };
+
+  if (country === "Nepal") {
+    return (
+      <>
+        <div className="mb-4">
+          <label className="block mb-1">Province*</label>
+          <input
+            type="text"
+            name="province"
+            value={addressFields.province}
+            onChange={handleAddressChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">District*</label>
+          <input
+            type="text"
+            name="district"
+            value={addressFields.district}
+            onChange={handleAddressChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">Municipality*</label>
+          <input
+            type="text"
+            name="municipality"
+            value={addressFields.municipality}
+            onChange={handleAddressChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">Ward No*</label>
+          <input
+            type="text"
+            name="wardNo"
+            value={addressFields.wardNo}
+            onChange={handleAddressChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+      </>
+    );
+  } else {
+    return (
+      <>
+        <div className="mb-4">
+          <label className="block mb-1">Street Address*</label>
+          <input
+            type="text"
+            name="street"
+            value={addressFields.street}
+            onChange={handleAddressChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">City*</label>
+          <input
+            type="text"
+            name="city"
+            value={addressFields.city}
+            onChange={handleAddressChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">Region/Province*</label>
+          <input
+            type="text"
+            name="region"
+            value={addressFields.region}
+            onChange={handleAddressChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">Postal Code*</label>
+          <input
+            type="text"
+            name="postalCode"
+            value={addressFields.postalCode}
+            onChange={handleAddressChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+      </>
+    );
+  }
+}
 
 export default function InitialApplicationForm() {
   const router = useRouter();
@@ -15,7 +151,7 @@ export default function InitialApplicationForm() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form data across 4 steps
+  // Main form data
   const [formData, setFormData] = useState({
     // Step 1: Basic Information
     firstName: "",
@@ -24,17 +160,16 @@ export default function InitialApplicationForm() {
     dob: "",
     email: "",
     phone: "",
+    country: "",
     citizenshipNo: "",
     citizenshipIssueDate: "",
+    passportNumber: "",
+    NRNNumber: "",
     // Step 2: Family & Address Details
     fatherName: "",
     grandfatherName: "",
     spouseName: "",
-    province: "",
-    district: "",
-    municipality: "",
-    wardNo: "",
-    temporaryAddress: "",
+    address: "",
     // Step 3: Professional Details & Investment Intent
     occupation: "",
     educationQualification: "",
@@ -44,14 +179,56 @@ export default function InitialApplicationForm() {
     agreeToTerms: false,
   });
 
-  // Handle input changes – handles text and checkboxes.
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // Separate state to persist individual address field values
+  const [addressFields, setAddressFields] = useState({
+    province: "",
+    district: "",
+    municipality: "",
+    wardNo: "",
+    street: "",
+    city: "",
+    region: "",
+    postalCode: "",
+  });
+
+  const educationOptions = [
+    "High School",
+    "Bachelor's Degree",
+    "Master's Degree",
+    "Doctorate (PhD)",
+    "Other",
+  ];
+
+  // Update formData for non-address fields
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, type } = e.target;
     const value = type === "checkbox" ? (e.target as HTMLInputElement).checked : e.target.value;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Validate the required fields for the current step.
+  // useEffect to update the combined address in formData whenever addressFields or country changes.
+  useEffect(() => {
+    if (formData.country === "Nepal") {
+      const { province, district, municipality, wardNo } = addressFields;
+      if (province && district && municipality && wardNo) {
+        const combined = `${municipality} - ${wardNo}, ${district}, ${province}`;
+        setFormData((prev) => ({ ...prev, address: combined }));
+      } else {
+        setFormData((prev) => ({ ...prev, address: "" }));
+      }
+    } else if (formData.country) {
+      const { street, city, region, postalCode } = addressFields;
+      if (street && city && region && postalCode) {
+        const combined = `${street}, ${city}, ${region}, ${postalCode}`;
+        setFormData((prev) => ({ ...prev, address: combined }));
+      } else {
+        setFormData((prev) => ({ ...prev, address: "" }));
+      }
+    }
+  }, [addressFields, formData.country]);
+
   const validateCurrentStep = (): boolean => {
     if (step === 1) {
       if (
@@ -60,30 +237,29 @@ export default function InitialApplicationForm() {
         !formData.dob ||
         !formData.email ||
         !formData.phone ||
-        !formData.citizenshipNo ||
-        !formData.citizenshipIssueDate
+        !formData.country
       ) {
         setErrorMsg("Please fill in all required fields in Basic Information.");
         return false;
       }
+      if (formData.country === "Nepal") {
+        if (!formData.citizenshipNo || !formData.citizenshipIssueDate) {
+          setErrorMsg("Please provide citizenship details.");
+          return false;
+        }
+      } else {
+        if (!formData.passportNumber) {
+          setErrorMsg("Please provide a passport number.");
+          return false;
+        }
+      }
     } else if (step === 2) {
-      if (
-        !formData.fatherName ||
-        !formData.grandfatherName ||
-        !formData.province ||
-        !formData.district ||
-        !formData.municipality ||
-        !formData.wardNo
-      ) {
+      if (!formData.fatherName || !formData.grandfatherName || !formData.address) {
         setErrorMsg("Please fill in all required fields in Family & Address Details.");
         return false;
       }
     } else if (step === 3) {
-      if (
-        !formData.occupation ||
-        !formData.educationQualification ||
-        !formData.workExperience
-      ) {
+      if (!formData.occupation || !formData.educationQualification || !formData.workExperience) {
         setErrorMsg("Please fill in all required fields in Professional Details.");
         return false;
       }
@@ -93,25 +269,21 @@ export default function InitialApplicationForm() {
         return false;
       }
     }
-    // Clear any existing error if validation passes.
     setErrorMsg("");
     return true;
   };
 
-  // Handler for the Next button. It validates the current step before proceeding.
   const handleNext = () => {
     if (validateCurrentStep()) {
       setStep((prev) => prev + 1);
     }
   };
 
-  // Back button clears error and navigates one step back.
   const handlePrev = () => {
     setErrorMsg("");
     setStep((prev) => prev - 1);
   };
 
-  // Form submission handler. Also validates the current step before submitting.
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!validateCurrentStep()) return;
@@ -137,7 +309,7 @@ export default function InitialApplicationForm() {
 
   const handlePopupOk = () => {
     setShowSuccessPopup(false);
-    router.push("/");
+    router.push("/dashboard");
   };
 
   const handleRedirectToLogin = () => {
@@ -147,19 +319,20 @@ export default function InitialApplicationForm() {
   return (
     <div className="pt-20 max-w-3xl mx-auto p-4">
       <h1 className="text-3xl font-bold text-center mb-4 mt-4">Apply for Share Purchase</h1>
-      <p className=" text-center">
+      <p className="text-center">
         Please fill in the form below to apply for purchasing shares in Infra Nepal Development Fund.
       </p>
-      <p className="mb-2 text-end">To check applied form status go to <a href="/dashboard" className="text-blue-800">Dashboard</a></p>
-      {/* Error Display */}
+      <p className="mb-2 text-end">
+        To check applied form status go to{" "}
+        <a href="/dashboard" className="text-blue-800">
+          Dashboard
+        </a>
+      </p>
       {errorMsg && (
         <div className="text-center mb-4">
           <p className="text-red-500">{errorMsg}</p>
           {errorMsg.toLowerCase().includes("already exist") && (
-            <button
-              onClick={handleRedirectToLogin}
-              className="bg-blue-600 text-white px-4 py-2 rounded mt-2"
-            >
+            <button onClick={handleRedirectToLogin} className="bg-blue-600 text-white px-4 py-2 rounded mt-2">
               Redirect to Login
             </button>
           )}
@@ -167,6 +340,7 @@ export default function InitialApplicationForm() {
       )}
 
       <form onSubmit={handleSubmit}>
+        {/* Step 1: Basic Information */}
         {step === 1 && (
           <motion.div
             variants={fadeUpVariant}
@@ -232,6 +406,23 @@ export default function InitialApplicationForm() {
               />
             </div>
             <div className="mb-4">
+              <label className="block mb-1">Country*</label>
+              <select
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                required
+              >
+                <option value="">Select Country</option>
+                {countries.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-4">
               <label className="block mb-1">Phone Number*</label>
               <input
                 type="tel"
@@ -242,28 +433,56 @@ export default function InitialApplicationForm() {
                 required
               />
             </div>
-            <div className="mb-4">
-              <label className="block mb-1">Citizenship Number*</label>
-              <input
-                type="text"
-                name="citizenshipNo"
-                value={formData.citizenshipNo}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1">Citizenship Issue Date*</label>
-              <input
-                type="date"
-                name="citizenshipIssueDate"
-                value={formData.citizenshipIssueDate}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-                required
-              />
-            </div>
+            {formData.country === "Nepal" ? (
+              <>
+                <div className="mb-4">
+                  <label className="block mb-1">Citizenship Number*</label>
+                  <input
+                    type="text"
+                    name="citizenshipNo"
+                    value={formData.citizenshipNo}
+                    onChange={handleChange}
+                    className="w-full border p-2 rounded"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block mb-1">Citizenship Issue Date*</label>
+                  <input
+                    type="date"
+                    name="citizenshipIssueDate"
+                    value={formData.citizenshipIssueDate}
+                    onChange={handleChange}
+                    className="w-full border p-2 rounded"
+                    required
+                  />
+                </div>
+              </>
+            ) : formData.country ? (
+              <>
+                <div className="mb-4">
+                  <label className="block mb-1">Passport Number*</label>
+                  <input
+                    type="text"
+                    name="passportNumber"
+                    value={formData.passportNumber}
+                    onChange={handleChange}
+                    className="w-full border p-2 rounded"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block mb-1">NRN Number (Optional)</label>
+                  <input
+                    type="text"
+                    name="NRNNumber"
+                    value={formData.NRNNumber}
+                    onChange={handleChange}
+                    className="w-full border p-2 rounded"
+                  />
+                </div>
+              </>
+            ) : null}
             <div className="flex justify-end">
               <button type="button" onClick={handleNext} className="bg-blue-600 text-white px-4 py-2 rounded mt-2">
                 Next
@@ -272,6 +491,7 @@ export default function InitialApplicationForm() {
           </motion.div>
         )}
 
+        {/* Step 2: Family & Address Details */}
         {step === 2 && (
           <motion.div
             variants={fadeUpVariant}
@@ -312,65 +532,7 @@ export default function InitialApplicationForm() {
                 className="w-full border p-2 rounded"
               />
             </div>
-            <label className="block mb-1">Permanent Address</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-1">Province*</label>
-                <input
-                  type="text"
-                  name="province"
-                  value={formData.province}
-                  onChange={handleChange}
-                  className="w-full border p-2 rounded"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-1">District*</label>
-                <input
-                  type="text"
-                  name="district"
-                  value={formData.district}
-                  onChange={handleChange}
-                  className="w-full border p-2 rounded"
-                  required
-                />
-              </div>
-            </div>
-            <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-1">Municipality*</label>
-                <input
-                  type="text"
-                  name="municipality"
-                  value={formData.municipality}
-                  onChange={handleChange}
-                  className="w-full border p-2 rounded"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-1">Ward No*</label>
-                <input
-                  type="text"
-                  name="wardNo"
-                  value={formData.wardNo}
-                  onChange={handleChange}
-                  className="w-full border p-2 rounded"
-                  required
-                />
-              </div>
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1">Temporary Address</label>
-              <textarea
-                name="temporaryAddress"
-                value={formData.temporaryAddress}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-                rows={3}
-              ></textarea>
-            </div>
+            <AddressFields country={formData.country} addressFields={addressFields} setAddressFields={setAddressFields} />
             <div className="flex justify-between">
               <button type="button" onClick={handlePrev} className="bg-gray-600 text-white px-4 py-2 rounded">
                 Back
@@ -382,6 +544,7 @@ export default function InitialApplicationForm() {
           </motion.div>
         )}
 
+        {/* Step 3: Professional Details & Investment Intent */}
         {step === 3 && (
           <motion.div
             variants={fadeUpVariant}
@@ -403,14 +566,20 @@ export default function InitialApplicationForm() {
             </div>
             <div className="mb-4">
               <label className="block mb-1">Education Qualification*</label>
-              <input
-                type="text"
+              <select
                 name="educationQualification"
                 value={formData.educationQualification}
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
                 required
-              />
+              >
+                <option value="">Select Qualification</option>
+                {educationOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="mb-4">
               <label className="block mb-1">Business/Work Experience in years*</label>
@@ -434,6 +603,7 @@ export default function InitialApplicationForm() {
           </motion.div>
         )}
 
+        {/* Step 4: Share Count */}
         {step === 4 && (
           <motion.div
             variants={fadeUpVariant}
@@ -453,8 +623,13 @@ export default function InitialApplicationForm() {
                 required
               />
               <p className="text-sm text-gray-600 mt-1">
-                (Each share costs 100 rupees. For 50 shares, deposit 5000 rupees.)
+                (Each share costs 100 rupees. For example, 100 shares will cost Rs{" "}
+                {(parseInt(formData.numberOfShares) || 0) * 100}.)
               </p>
+              <label className="block mb-1">Price of Shares</label>
+              <div className="w-full border p-2 rounded bg-gray-100 mt-2">
+                {(parseInt(formData.numberOfShares) || 0) * 100}
+              </div>
             </div>
             <div className="mb-4">
               <label className="inline-flex items-center">
@@ -475,11 +650,7 @@ export default function InitialApplicationForm() {
               <button type="button" onClick={handlePrev} className="bg-gray-600 text-white px-4 py-2 rounded">
                 Back
               </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-green-600 text-white px-4 py-2 rounded"
-              >
+              <button type="submit" disabled={isSubmitting} className="bg-green-600 text-white px-4 py-2 rounded">
                 {isSubmitting ? "Submitting..." : "Submit Application"}
               </button>
             </div>
@@ -500,10 +671,7 @@ export default function InitialApplicationForm() {
             <p className="text-lg mb-6">
               Your application has been submitted successfully. We will email you for further instruction.
             </p>
-            <button
-              onClick={handlePopupOk}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
-            >
+            <button onClick={handlePopupOk} className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
               OK
             </button>
           </motion.div>
